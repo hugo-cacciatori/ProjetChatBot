@@ -2,7 +2,6 @@ import { Controller, Get, UseGuards, Request } from '@nestjs/common';
 import { Body, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from './auth.guard';
-import { Use } from 'react-native-svg';
 
 
 @Controller('auth')
