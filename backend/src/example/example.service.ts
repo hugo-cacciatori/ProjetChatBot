@@ -1,24 +1,26 @@
 import { Injectable } from '@nestjs/common';
+import { CreateExampleDto } from './dto/create-example.dto';
+import { UpdateExampleDto } from './dto/update-example.dto';
 
 @Injectable()
 export class ExampleService {
-  private name = 'World';
-
-  example(): string {
-    return 'This should be somewhat instant';
+  create(createExampleDto: CreateExampleDto) {
+    return 'This action adds a new example';
   }
 
-  async asyncExample(): Promise<string> {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve('This took some time'), 2000);
-    });
+  findAll() {
+    return `This action returns all example`;
   }
 
-  getHello(): string {
-    return `Hello ${this.name}!`;
+  findOne(id: number) {
+    return `This action returns a #${id} example`;
   }
 
-  setName(name: string): void {
-    this.name = name;
+  update(id: number, updateExampleDto: UpdateExampleDto) {
+    return `This action updates a #${id} example`;
+  }
+
+  remove(id: number) {
+    return `This action removes a #${id} example`;
   }
 }
