@@ -5,20 +5,34 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { GeneratedRequest } from './entities/generated-request.entity';
 import { Repository } from 'typeorm';
 import { GeneratedRequestStatus } from '../utils/enum/generatedRequestStatus.enum';
+import { LlmService } from '../llm/llm.service';
+import * as XLSX from 'xlsx';
 
 @Injectable()
 export class GeneratedRequestService {
   constructor(
     @InjectRepository(GeneratedRequest)
     private readonly generatedRequestRepository: Repository<GeneratedRequest>,
+    private readonly llmService: LlmService,
   ) {}
 
-  create(createGeneratedRequestDto: CreateGeneratedRequestDto) {
+  async fileParser(fileBuffer: Buffer, dto: CreateGeneratedRequestDto) {
     try {
-      return this.generatedRequestRepository.create({
-        status: GeneratedRequestStatus.PENDING,
-        ...createGeneratedRequestDto,
-      });
+      const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet);
+      const results = [];
+
+      for (const row of rows) {
+        const generatedRequest = await this.generateRequest({
+          status: GeneratedRequestStatus.PENDING,
+          ...dto,
+        });
+
+        const llmResult = await this.llmService.request(row);
+        results.push({ id: generatedRequest.id, llmResult });
+      }
+      return results;
     } catch (error) {
       throw new InternalServerErrorException(
         'an error occurred while created request',
@@ -27,9 +41,23 @@ export class GeneratedRequestService {
     }
   }
 
-  findOne(generatedRequestId: number) {
+  async generateRequest(createGeneratedRequestDto: CreateGeneratedRequestDto) {
     try {
-      return this.generatedRequestRepository.findOneBy({
+      const generatedRequest = this.generatedRequestRepository.create(
+        createGeneratedRequestDto,
+      );
+      return await this.generatedRequestRepository.save(generatedRequest);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'an error occurred while generateRequest',
+        error,
+      );
+    }
+  }
+
+  async findOne(generatedRequestId: number) {
+    try {
+      return await this.generatedRequestRepository.findOneBy({
         id: generatedRequestId,
       });
     } catch (error) {
@@ -40,12 +68,12 @@ export class GeneratedRequestService {
     }
   }
 
-  update(
+  async update(
     generatedRequestId: number,
     updateGeneratedRequestDto: UpdateGeneratedRequestDto,
   ) {
     try {
-      return this.generatedRequestRepository.update(
+      return await this.generatedRequestRepository.update(
         generatedRequestId,
         updateGeneratedRequestDto,
       );
@@ -57,9 +85,9 @@ export class GeneratedRequestService {
     }
   }
 
-  remove(generatedRequestId: number) {
+  async remove(generatedRequestId: number) {
     try {
-      return this.generatedRequestRepository.delete(generatedRequestId);
+      return await this.generatedRequestRepository.delete(generatedRequestId);
     } catch (error) {
       throw new InternalServerErrorException(
         `an error occurred while deleting request with id ${generatedRequestId}`,
