@@ -12,4 +12,4 @@ services:
 
   frontend:
     ports:
-      - "${PORT}:4000"
+      - "${FRONTEND_PORT}:4000"
