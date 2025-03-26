@@ -5,6 +5,7 @@ import { TRPCModule } from 'nestjs-trpc';
 import { TrpcPanelController } from './trpc-panel.controller';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { ExampleModule } from './example/example.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { UsersModule } from './users/users.module';
     }),
     AuthModule,
     UsersModule,
+    ExampleModule,
   ],
   controllers: [TrpcPanelController],
   providers: [AppService, AppRouter],
