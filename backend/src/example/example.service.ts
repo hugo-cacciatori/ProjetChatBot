@@ -21,4 +21,8 @@ export class ExampleService {
   setName(name: string): void {
     this.name = name;
   }
+
+  getSomethingById(id: number): string {
+    return `You asked for item with ID: ${id}`;
+  }
 }

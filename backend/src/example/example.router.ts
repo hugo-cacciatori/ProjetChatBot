@@ -22,6 +22,14 @@ export class ExampleRouter {
     return this.exampleService.getHello();
   }
 
+  @Query({
+    input: QueryDto.ExampleWithInputQueryInput,
+    output: QueryDto.ExampleWithInputQueryOutput,
+  })
+  getSomethingById(@Input('id') id: number): string {
+    return this.exampleService.getSomethingById(id);
+  }
+
   @Mutation({ input: MutationDto.SetNameInput })
   setName(@Input('name') name: string): void {
     return this.exampleService.setName(name);
