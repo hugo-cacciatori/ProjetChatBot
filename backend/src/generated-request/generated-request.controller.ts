@@ -22,26 +22,24 @@ export class GeneratedRequestController {
     return this.generatedRequestService.create(file);
   }
 
-  @Get()
-  findAll() {
-    return this.generatedRequestService.findAll();
+  @Get(':generatedRequestId')
+  findOne(@Param('generatedRequestId') generatedRequestId: number) {
+    return this.generatedRequestService.findOne(generatedRequestId);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.generatedRequestService.findOne(+id);
-  }
-
-  @Patch(':id')
+  @Patch(':generatedRequestId')
   update(
-    @Param('id') id: string,
+    @Param('generatedRequestId') generatedRequestId: number,
     @Body() updateGeneratedRequestDto: UpdateGeneratedRequestDto,
   ) {
-    return this.generatedRequestService.update(+id, updateGeneratedRequestDto);
+    return this.generatedRequestService.update(
+      generatedRequestId,
+      updateGeneratedRequestDto,
+    );
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.generatedRequestService.remove(+id);
+  @Delete(':generatedRequestId')
+  remove(@Param('generatedRequestId') generatedRequestId: number) {
+    return this.generatedRequestService.remove(generatedRequestId);
   }
 }

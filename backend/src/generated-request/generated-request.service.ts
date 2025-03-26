@@ -12,6 +12,7 @@ export class GeneratedRequestService {
     @InjectRepository(GeneratedRequest)
     private readonly generatedRequestRepository: Repository<GeneratedRequest>,
   ) {}
+
   create(createGeneratedRequestDto: CreateGeneratedRequestDto) {
     try {
       return this.generatedRequestRepository.create({
@@ -26,19 +27,44 @@ export class GeneratedRequestService {
     }
   }
 
-  findAll() {
-    return `This action returns all generatedRequest`;
+  findOne(generatedRequestId: number) {
+    try {
+      return this.generatedRequestRepository.findOneBy({
+        id: generatedRequestId,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `an error occurred while finding request with id ${generatedRequestId}`,
+        error,
+      );
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} generatedRequest`;
+  update(
+    generatedRequestId: number,
+    updateGeneratedRequestDto: UpdateGeneratedRequestDto,
+  ) {
+    try {
+      return this.generatedRequestRepository.update(
+        generatedRequestId,
+        updateGeneratedRequestDto,
+      );
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `an error occurred while updating request with id ${generatedRequestId}`,
+        error,
+      );
+    }
   }
 
-  update(id: number, updateGeneratedRequestDto: UpdateGeneratedRequestDto) {
-    return `This action updates a #${id} generatedRequest`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} generatedRequest`;
+  remove(generatedRequestId: number) {
+    try {
+      return this.generatedRequestRepository.delete(generatedRequestId);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `an error occurred while deleting request with id ${generatedRequestId}`,
+        error,
+      );
+    }
   }
 }
