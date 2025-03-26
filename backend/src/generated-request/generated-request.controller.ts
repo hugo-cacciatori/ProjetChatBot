@@ -1,15 +1,25 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UploadedFile,
+} from '@nestjs/common';
 import { GeneratedRequestService } from './generated-request.service';
-import { CreateGeneratedRequestDto } from './dto/create-generated-request.dto';
 import { UpdateGeneratedRequestDto } from './dto/update-generated-request.dto';
 
 @Controller('generated-request')
 export class GeneratedRequestController {
-  constructor(private readonly generatedRequestService: GeneratedRequestService) {}
+  constructor(
+    private readonly generatedRequestService: GeneratedRequestService,
+  ) {}
 
   @Post()
-  create(@Body() createGeneratedRequestDto: CreateGeneratedRequestDto) {
-    return this.generatedRequestService.create(createGeneratedRequestDto);
+  create(@UploadedFile() file) {
+    return this.generatedRequestService.create(file);
   }
 
   @Get()
@@ -23,7 +33,10 @@ export class GeneratedRequestController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateGeneratedRequestDto: UpdateGeneratedRequestDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateGeneratedRequestDto: UpdateGeneratedRequestDto,
+  ) {
     return this.generatedRequestService.update(+id, updateGeneratedRequestDto);
   }
 
