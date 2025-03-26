@@ -1,0 +1,42 @@
+version: "1.0"
+services:
+
+  db:
+    image: mariadb:latest
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_PASS}
+      MARIADB_DATABASE: ${DB_DATABASE}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASS}
+    restart: unless-stopped
+    volumes:
+      - ./mariaDB/data:/var/lib/mysql:rw
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  backend:
+    build: ./backend
+    volumes:
+      - ./$HTTP_FOLDER:/upload
+      - ./logs:/logs
+    depends_on:
+      - db
+    restart: unless-stopped
+    links:
+      - db
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
