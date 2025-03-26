@@ -1,34 +1,45 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UploadedFile,
+} from '@nestjs/common';
 import { GeneratedRequestService } from './generated-request.service';
-import { CreateGeneratedRequestDto } from './dto/create-generated-request.dto';
 import { UpdateGeneratedRequestDto } from './dto/update-generated-request.dto';
 
 @Controller('generated-request')
 export class GeneratedRequestController {
-  constructor(private readonly generatedRequestService: GeneratedRequestService) {}
+  constructor(
+    private readonly generatedRequestService: GeneratedRequestService,
+  ) {}
 
   @Post()
-  create(@Body() createGeneratedRequestDto: CreateGeneratedRequestDto) {
-    return this.generatedRequestService.create(createGeneratedRequestDto);
+  create(@UploadedFile() file) {
+    return this.generatedRequestService.create(file);
   }
 
-  @Get()
-  findAll() {
-    return this.generatedRequestService.findAll();
+  @Get(':generatedRequestId')
+  findOne(@Param('generatedRequestId') generatedRequestId: number) {
+    return this.generatedRequestService.findOne(generatedRequestId);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.generatedRequestService.findOne(+id);
+  @Patch(':generatedRequestId')
+  update(
+    @Param('generatedRequestId') generatedRequestId: number,
+    @Body() updateGeneratedRequestDto: UpdateGeneratedRequestDto,
+  ) {
+    return this.generatedRequestService.update(
+      generatedRequestId,
+      updateGeneratedRequestDto,
+    );
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateGeneratedRequestDto: UpdateGeneratedRequestDto) {
-    return this.generatedRequestService.update(+id, updateGeneratedRequestDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.generatedRequestService.remove(+id);
+  @Delete(':generatedRequestId')
+  remove(@Param('generatedRequestId') generatedRequestId: number) {
+    return this.generatedRequestService.remove(generatedRequestId);
   }
 }
