@@ -9,7 +9,7 @@ export class AuthService {
     constructor(private usersService: UsersService, private jwtService: JwtService    ) {}
 
   async signIn(username: string, pass: string): Promise<any> {
-    const user = await this.usersService.findOne(username);
+    const user = await this.usersService.findUsername(username);
     if (user?.password !== pass) {
       throw new UnauthorizedException();
     }
@@ -20,5 +20,9 @@ export class AuthService {
     
   }
 
+  
+  async register(registerDto: any): Promise<any> {
+    return this.usersService.create(registerDto);
+  }
 
 }

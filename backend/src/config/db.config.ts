@@ -14,5 +14,7 @@ export default registerAs('database', () => {
     cli: {
       migrationsDir: 'src/migrations',
     },
+    entities: ['dist/**/*.entity{.ts,.js}'],
+    synchronize:true
   };
 });
