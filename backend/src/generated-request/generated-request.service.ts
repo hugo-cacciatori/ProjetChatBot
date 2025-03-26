@@ -18,7 +18,7 @@ export class GeneratedRequestService {
 
   async fileParser(fileBuffer: Buffer, dto: CreateGeneratedRequestDto) {
     try {
-      const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
+      const workbook = XLSX.read(fileBuffer, { type: 'buffer', WTF: true });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(sheet);
       const results = [];
@@ -34,6 +34,7 @@ export class GeneratedRequestService {
       }
       return results;
     } catch (error) {
+      console.error('Excel processing error:', error);
       throw new InternalServerErrorException(
         'an error occurred while created request',
         error,
@@ -48,6 +49,7 @@ export class GeneratedRequestService {
       );
       return await this.generatedRequestRepository.save(generatedRequest);
     } catch (error) {
+      console.error('Excel generating request:', error);
       throw new InternalServerErrorException(
         'an error occurred while generateRequest',
         error,
@@ -61,6 +63,7 @@ export class GeneratedRequestService {
         id: generatedRequestId,
       });
     } catch (error) {
+      console.error('error finding file:', error);
       throw new InternalServerErrorException(
         `an error occurred while finding request with id ${generatedRequestId}`,
         error,
@@ -78,6 +81,7 @@ export class GeneratedRequestService {
         updateGeneratedRequestDto,
       );
     } catch (error) {
+      console.error('Excel updating error:', error);
       throw new InternalServerErrorException(
         `an error occurred while updating request with id ${generatedRequestId}`,
         error,
@@ -89,6 +93,7 @@ export class GeneratedRequestService {
     try {
       return await this.generatedRequestRepository.delete(generatedRequestId);
     } catch (error) {
+      console.error('Excel removing error:', error);
       throw new InternalServerErrorException(
         `an error occurred while deleting request with id ${generatedRequestId}`,
         error,
