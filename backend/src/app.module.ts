@@ -6,6 +6,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ExampleModule } from './example/example.module';
 import { GeneratedRequestModule } from './generated-request/generated-request.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { LlmModule } from './llm/llm.module';
 import dbConfiguration from './config/db.config';
 
 @Module({
@@ -26,6 +27,7 @@ import dbConfiguration from './config/db.config';
     UsersModule,
     ExampleModule,
     GeneratedRequestModule,
+    LlmModule,
   ],
   providers: [AppService],
 })
