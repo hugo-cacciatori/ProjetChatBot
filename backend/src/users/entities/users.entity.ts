@@ -4,13 +4,7 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateCol
 @Entity()
 export class Users{
 
-    constructor(firstName: string, lastName: string, username: string, password: string){
-        this.username = username;
-        this.password = password;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.lastConnection_At = null;
-    }
+
 
     @PrimaryGeneratedColumn()
     uniqueId: number;
@@ -34,9 +28,11 @@ export class Users{
     updated_At: Date;
 
     @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  lastConnection_At: Date;
+    lastConnection_At: Date;
 
     @Column({ type: 'int', nullable: true, default: null })
     request: number | null;
 
+    @Column({ type: 'boolean', default: false })
+    isPremium : boolean
 }
