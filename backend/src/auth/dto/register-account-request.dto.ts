@@ -4,7 +4,7 @@ export class RegisterAccountRequestDto {
     lastName: string;
     password: string;
 
-    constructor(username: string, firstName: string, lastName: string, password: string, confirmPassword: string) {
+    constructor(username: string, firstName: string, lastName: string, password: string) {
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
