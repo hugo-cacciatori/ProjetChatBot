@@ -33,11 +33,6 @@ export class UsersBuilder {
     return this;
   }
 
-  setRequestCount(requestCount: GeneratedRequest): UsersBuilder {
-    this.user.request = requestCount;
-    return this;
-  }
-
   setIsPremium(isPremium: boolean): UsersBuilder {
     this.user.isPremium = isPremium;
     return this;
