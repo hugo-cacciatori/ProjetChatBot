@@ -11,12 +11,10 @@ import dbConfiguration from './config/db.config';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: './src/config/.env.old.dev',
       load: [dbConfiguration],
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-
       useFactory: (configService: ConfigService) => ({
         ...configService.get('database'),
       }),
