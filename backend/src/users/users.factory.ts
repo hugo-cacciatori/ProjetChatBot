@@ -11,7 +11,6 @@ export class UserFactory{
       .setLastName(lastName)
       .setLastConnectionAt(new Date())
       .setIsPremium(false)
-      .setRequestCount(0)
       .build();
   }
 
@@ -23,7 +22,6 @@ export class UserFactory{
       .setLastName(lastName)
       .setLastConnectionAt(new Date())
       .setIsPremium(true)
-      .setRequestCount(0)
       .build();
   }
 

@@ -1,5 +1,5 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { GeneratedRequest } from 'src/generated-request/entities/generated-request.entity';
 
 @Entity()
 export class Users{
@@ -30,8 +30,8 @@ export class Users{
     @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     lastConnection_At: Date;
 
-    @Column({ type: 'int', nullable: true, default: null })
-    request: number | null;
+    @OneToMany(() => GeneratedRequest, (generatedRequest) => generatedRequest.id, { cascade: true, nullable: true })
+    request: GeneratedRequest | null;
 
     @Column({ type: 'boolean', default: false })
     isPremium : boolean

@@ -1,4 +1,5 @@
 import { Users } from '../entities/users.entity';
+import { GeneratedRequest } from 'src/generated-request/entities/generated-request.entity';
 
 export class UsersBuilder {
   private user: Users;
@@ -32,7 +33,7 @@ export class UsersBuilder {
     return this;
   }
 
-  setRequestCount(requestCount: number): UsersBuilder {
+  setRequestCount(requestCount: GeneratedRequest): UsersBuilder {
     this.user.request = requestCount;
     return this;
   }
