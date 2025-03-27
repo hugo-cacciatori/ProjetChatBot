@@ -7,8 +7,19 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  findAll() {
-    return this.usersService.findAll();
+  async findAll() {
+    try {
+        const users = await this.usersService.findAll();
+    
+        users.forEach(user => {
+          user.password = undefined;
+        });
+    
+        return users;
+      } catch (error) {
+        throw new HttpException(error.message, error.status || HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    
   }
 
   @Get(':id')
@@ -16,12 +27,12 @@ export class UsersController {
     try {
         const user  = await this.usersService.findOne(id)
         user.password = undefined;
+        return user
 
     } catch (error) {
         throw new HttpException(error.message, error.status || HttpStatus.INTERNAL_SERVER_ERROR);
       }
     
-    return this.usersService.findOne(id);
   }
 
   @Patch(':id')
