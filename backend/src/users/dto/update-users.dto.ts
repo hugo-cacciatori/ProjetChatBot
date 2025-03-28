@@ -1,5 +1,5 @@
 import { PartialType } from "@nestjs/mapped-types";
-import { RegisterAccountRequestDto } from "src/auth/dto/register-account-request.dto";
+import { RegisterAccountRequestDto } from "../../auth/dto/register-account-request.dto";
 
 
 

@@ -1,5 +1,5 @@
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { GeneratedRequest } from 'src/generated-request/entities/generated-request.entity';
+import { GeneratedRequest } from '../../generated-request/entities/generated-request.entity';
 
 @Entity()
 export class Users{

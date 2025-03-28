@@ -1,7 +1,7 @@
 
 import { Body, HttpException, HttpStatus, Injectable, Param, Patch } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { RegisterAccountRequestDto } from 'src/auth/dto/register-account-request.dto';
+import { RegisterAccountRequestDto } from '../auth/dto/register-account-request.dto';
 import { Repository } from 'typeorm';
 import { Users } from './entities/users.entity';
 import { UpdateUsersDto } from './dto/update-users.dto';
