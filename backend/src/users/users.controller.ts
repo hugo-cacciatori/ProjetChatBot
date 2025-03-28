@@ -6,15 +6,18 @@ import {
   HttpException,
   HttpStatus,
   Get,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUsersDto } from './dto/update-users.dto';
+import { AuthGuard } from 'src/auth/auth.guard';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
+  @UseGuards(AuthGuard)
   async findAll() {
     try {
       const users = await this.usersService.findAll();
@@ -33,6 +36,7 @@ export class UsersController {
   }
 
   @Get(':id')
+  @UseGuards(AuthGuard)
   async findUser(@Param('id') id: number) {
     try {
       const user = await this.usersService.findOne(id);
@@ -47,6 +51,7 @@ export class UsersController {
   }
 
   @Patch(':id')
+  @UseGuards(AuthGuard)
   async updateUser(
     @Param('id') id: number,
     @Body() updateUserDto: UpdateUsersDto,
