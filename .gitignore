@@ -1,5 +1,3 @@
-./.idea
-./mariaDB/data/.
-
-# pour MAC
-mariaDB
+/.idea/
+/mariaDB/data/
+/.env
