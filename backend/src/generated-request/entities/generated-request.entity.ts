@@ -1,5 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { GeneratedRequestStatus } from '../../utils/enum/generatedRequestStatus.enum';
+import { Product } from '../../product/entities/product.entity';
 
 @Entity()
 export class GeneratedRequest {
@@ -9,5 +10,8 @@ export class GeneratedRequest {
   @Column({ type: 'enum', enum: GeneratedRequestStatus })
   status: GeneratedRequestStatus;
 
-  //TODO: link to product and user
+  @OneToMany(() => Product, (product) => product.request)
+  products: Product[];
+
+  //TODO: link to user
 }

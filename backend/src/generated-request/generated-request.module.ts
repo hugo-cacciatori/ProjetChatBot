@@ -9,5 +9,6 @@ import { LlmModule } from '../llm/llm.module';
   imports: [TypeOrmModule.forFeature([GeneratedRequest]), LlmModule],
   controllers: [GeneratedRequestController],
   providers: [GeneratedRequestService],
+  exports: [GeneratedRequestService],
 })
 export class GeneratedRequestModule {}
