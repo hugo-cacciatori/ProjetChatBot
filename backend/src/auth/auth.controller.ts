@@ -6,24 +6,23 @@ import { RegisterAccountRequestDto } from './dto/register-account-request.dto';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) {}
 
-    @HttpCode(HttpStatus.OK)
-    @Post('login')
-    signIn(@Body() signInDto: Record<string, any>) {
-        return this.authService.signIn(signInDto.username, signInDto.password);
-    }
+  @HttpCode(HttpStatus.OK)
+  @Post('login')
+  signIn(@Body() signInDto: Record<string, any>) {
+    return this.authService.signIn(signInDto.username, signInDto.password);
+  }
 
-    
-    @Get('profile')
-    @UseGuards(AuthGuard)
-    getProfile(@Request() req) {
-        return req.user;
-    }
+  @Get('profile')
+  @UseGuards(AuthGuard)
+  getProfile(@Request() req) {
+    return req.user;
+  }
 
-    // create a new user
-    @Post('register')
-    register(@Body() registerAccountRequestDto: RegisterAccountRequestDto) {
-        return this.authService.register(registerAccountRequestDto);
-    }
+  // create a new user
+  @Post('register')
+  register(@Body() registerAccountRequestDto: RegisterAccountRequestDto) {
+    return this.authService.register(registerAccountRequestDto);
+  }
 }

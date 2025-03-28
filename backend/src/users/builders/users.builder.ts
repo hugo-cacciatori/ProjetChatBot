@@ -34,8 +34,6 @@ export class UsersBuilder {
     return this;
   }
 
-
-
   build(): Users {
     return this.user;
   }

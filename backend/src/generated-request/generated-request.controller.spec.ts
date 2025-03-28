@@ -11,7 +11,9 @@ describe('GeneratedRequestController', () => {
       providers: [GeneratedRequestService],
     }).compile();
 
-    controller = module.get<GeneratedRequestController>(GeneratedRequestController);
+    controller = module.get<GeneratedRequestController>(
+      GeneratedRequestController,
+    );
   });
 
   it('should be defined', () => {
