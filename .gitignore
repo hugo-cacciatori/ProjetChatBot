@@ -1,2 +1,5 @@
 ./.idea
 ./mariaDB/data/.
+
+# pour MAC
+mariaDB
