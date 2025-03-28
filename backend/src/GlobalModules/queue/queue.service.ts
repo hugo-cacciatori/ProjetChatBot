@@ -44,10 +44,6 @@ export class QueueService {
     return this.queue[0];
   }
 
-  isEmpty(): boolean {
-    return this.queue.length === 0;
-  }
-
   getAllJobs(): QueueJob[] {
     return [...this.queue];
   }
