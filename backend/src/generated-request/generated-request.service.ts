@@ -24,12 +24,14 @@ export class GeneratedRequestService {
       const workbook = XLSX.read(fileBuffer, { type: 'buffer', WTF: true });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(sheet);
+      const ids = [];
 
       for (const row of rows) {
         const builder = new GeneratedRequestBuilder(this.queueService, this);
-        await builder.withDto(dto).withRow(row).buildAndQueue();
+        const id = await builder.withDto(dto).withRow(row).buildAndQueue();
+        ids.push(id);
       }
-      return { message: `${rows.length} items enqueued.` };
+      return { message: `${ids.length} items enqueued.`, ids };
     } catch (error) {
       console.error('Excel processing error:', error);
       throw new InternalServerErrorException(
@@ -39,21 +41,23 @@ export class GeneratedRequestService {
     }
   }
 
-  async processNextRequest() {
-    const job = this.queueService.peek();
-    if (!job) return;
-
-    const { dto, row } = job.data;
+  async processNextRequest(data: {
+    dto: CreateGeneratedRequestDto;
+    row: any;
+    generatedRequestId: number;
+  }) {
+    const { dto, row, generatedRequestId } = data;
 
     try {
-      const generatedRequest = await this.update(dto.id, {
+      const generatedRequest = await this.update(generatedRequestId, {
         status: GeneratedRequestStatus.IN_PROGRESS,
         ...dto,
       });
-
       const llmResult = await this.llmService.request(row);
 
-      this.queueService.dequeue();
+      await this.generatedRequestRepository.update(generatedRequest[0].id, {
+        status: GeneratedRequestStatus.DONE,
+      });
       return { id: generatedRequest[0].id, llmResult };
     } catch (error) {
       console.error('Failed to process job:', error);

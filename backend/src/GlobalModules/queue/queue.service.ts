@@ -20,6 +20,7 @@ export class QueueService implements OnModuleInit {
   onModuleInit() {
     this.startProcessorLoop();
   }
+  private isProcessing = false;
 
   enqueue<T = any>(type: string, data: T): QueueJob {
     const job: QueueJob<T> = {
@@ -63,16 +64,28 @@ export class QueueService implements OnModuleInit {
     this.isRunning = true;
 
     while (true) {
+      if (this.isProcessing) {
+        await this.sleep(100);
+        continue;
+      }
+
+      const job = this.dequeue();
+      if (!job) {
+        await this.sleep(100);
+        continue;
+      }
+
+      this.isProcessing = true;
       try {
-        const job = this.queue.shift();
         if (!job) {
-          await this.sleep(1000);
+          await this.sleep(100);
           continue;
         }
+        this.isProcessing = true;
 
         switch (job.type) {
           case 'generatedRequest':
-            await this.generatedRequestService.processNextRequest();
+            await this.generatedRequestService.processNextRequest(job.data);
             break;
 
           default:
@@ -80,6 +93,8 @@ export class QueueService implements OnModuleInit {
         }
       } catch (err) {
         console.error('Error processing job', err);
+      } finally {
+        this.isProcessing = false;
       }
 
       await this.sleep(100);

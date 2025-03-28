@@ -1,4 +1,10 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { GeneratedRequestStatus } from '../../utils/enum/generatedRequestStatus.enum';
 import { User } from '../../users/entities/user.entity';
 
@@ -12,4 +18,10 @@ export class GeneratedRequest {
 
   @OneToMany(() => User, (User) => User.id)
   users: User[];
+
+  @CreateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP(6)',
+  })
+  public created_at: Date;
 }

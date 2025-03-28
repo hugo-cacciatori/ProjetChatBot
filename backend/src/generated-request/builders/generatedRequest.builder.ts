@@ -27,11 +27,12 @@ export class GeneratedRequestBuilder {
     return this;
   }
 
-  async buildAndQueue(): Promise<void> {
+  async buildAndQueue(): Promise<number> {
+    const requestContent = this.dto ? this.dto : this.row;
     const generatedRequest = await this.generatedRequestService.generateRequest(
       {
         status: GeneratedRequestStatus.PENDING,
-        ...this.dto,
+        ...requestContent,
       },
     );
 
@@ -40,5 +41,6 @@ export class GeneratedRequestBuilder {
       dto: this.dto,
       generatedRequestId: generatedRequest.id,
     });
+    return generatedRequest.id;
   }
 }
