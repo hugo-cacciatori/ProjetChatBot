@@ -13,7 +13,7 @@ import { SetMetadata } from '@nestjs/common';
   imports: [UsersModule,
     JwtModule.register({
         global: true,
-        secret: jwtConstants.secret, //TODO: move to .env
+        secret: process.env.JWT_SECRET,
         signOptions: { expiresIn: '60s' },
       }),
   
