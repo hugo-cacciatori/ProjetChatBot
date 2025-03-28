@@ -33,6 +33,4 @@ export class Users{
     @OneToMany(() => GeneratedRequest, (generatedRequest) => generatedRequest.id, { cascade: true, nullable: true })
     request: GeneratedRequest | null;
 
-    @Column({ type: 'boolean', default: false })
-    isPremium : boolean
 }

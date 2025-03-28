@@ -6,6 +6,7 @@ export class UsersBuilder {
 
   constructor() {
     this.user = new Users();
+    this.user.created_At = new Date();
   }
 
   setUsername(username: string): UsersBuilder {
@@ -33,10 +34,7 @@ export class UsersBuilder {
     return this;
   }
 
-  setIsPremium(isPremium: boolean): UsersBuilder {
-    this.user.isPremium = isPremium;
-    return this;
-  }
+
 
   build(): Users {
     return this.user;

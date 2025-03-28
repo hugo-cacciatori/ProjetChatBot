@@ -5,8 +5,7 @@ import { RegisterAccountRequestDto } from 'src/auth/dto/register-account-request
 import { Repository } from 'typeorm';
 import { Users } from './entities/users.entity';
 import { UpdateUsersDto } from './dto/update-users.dto';
-import { UserFactory } from './users.factory';
-
+import { UsersBuilder } from './builders/users.builder';
 
 
 
@@ -30,23 +29,13 @@ export class UsersService {
       }
 
 
-    let user : Users;
-    if (registerDto.isPremium === true){
-      user = UserFactory.createPremiumUser(
-        registerDto.username,
-        registerDto.password,
-        registerDto.firstName,
-        registerDto.lastName
-      )
-    } else {
-      user = UserFactory.createUser(
-        registerDto.username,
-        registerDto.password,
-        registerDto.firstName,
-        registerDto.lastName
-      )
-    }
-    
+  
+    let user = new UsersBuilder().setUsername(registerDto.username)
+      .setPassword(registerDto.password)
+      .setFirstName(registerDto.firstName)
+      .setLastName(registerDto.lastName)
+      .build();
+
     
 
     await this.usersRepository.save(user);

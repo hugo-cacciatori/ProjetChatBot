@@ -3,14 +3,14 @@ export class RegisterAccountRequestDto {
     firstName: string;
     lastName: string;
     password: string;
-    isPremium: boolean;
+    isAdmin: boolean;
 
-    constructor(username: string, firstName: string, lastName: string, password: string, isPremium: boolean) {
+    constructor(username: string, firstName: string, lastName: string, password: string, isAdmin: boolean) {
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
         this.password = password;
-        this.isPremium = isPremium;
+        this.isAdmin = isAdmin;
     }
 
 }
