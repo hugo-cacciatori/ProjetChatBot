@@ -7,6 +7,8 @@ import { Repository } from 'typeorm';
 import { GeneratedRequestStatus } from '../utils/enum/generatedRequestStatus.enum';
 import { LlmService } from '../llm/llm.service';
 import * as XLSX from 'xlsx';
+import { QueueService } from '../GlobalModules/queue/queue.service';
+import { GeneratedRequestBuilder } from './builders/generatedRequest.builder';
 
 @Injectable()
 export class GeneratedRequestService {
@@ -14,6 +16,7 @@ export class GeneratedRequestService {
     @InjectRepository(GeneratedRequest)
     private readonly generatedRequestRepository: Repository<GeneratedRequest>,
     private readonly llmService: LlmService,
+    private readonly queueService: QueueService,
   ) {}
 
   async fileParser(fileBuffer: Buffer, dto: CreateGeneratedRequestDto) {
@@ -21,24 +24,43 @@ export class GeneratedRequestService {
       const workbook = XLSX.read(fileBuffer, { type: 'buffer', WTF: true });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(sheet);
-      const results = [];
+      const ids = [];
 
       for (const row of rows) {
-        const generatedRequest = await this.generateRequest({
-          status: GeneratedRequestStatus.PENDING,
-          ...dto,
-        });
-
-        const llmResult = await this.llmService.request(row);
-        results.push({ id: generatedRequest.id, llmResult });
+        const builder = new GeneratedRequestBuilder(this.queueService, this);
+        const id = await builder.withDto(dto).withRow(row).buildAndQueue();
+        ids.push(id);
       }
-      return results;
+      return { message: `${ids.length} items enqueued.`, ids };
     } catch (error) {
       console.error('Excel processing error:', error);
       throw new InternalServerErrorException(
         'an error occurred while created request',
         error,
       );
+    }
+  }
+
+  async processNextRequest(data: {
+    dto: CreateGeneratedRequestDto;
+    row: any;
+    generatedRequestId: number;
+  }) {
+    const { dto, row, generatedRequestId } = data;
+
+    try {
+      const generatedRequest = await this.update(generatedRequestId, {
+        status: GeneratedRequestStatus.IN_PROGRESS,
+        ...dto,
+      });
+      const llmResult = await this.llmService.request(row);
+
+      await this.generatedRequestRepository.update(generatedRequest[0].id, {
+        status: GeneratedRequestStatus.DONE,
+      });
+      return { id: generatedRequest[0].id, llmResult };
+    } catch (error) {
+      console.error('Failed to process job:', error);
     }
   }
 
@@ -76,10 +98,13 @@ export class GeneratedRequestService {
     updateGeneratedRequestDto: UpdateGeneratedRequestDto,
   ) {
     try {
-      return await this.generatedRequestRepository.update(
+      await this.generatedRequestRepository.update(
         generatedRequestId,
         updateGeneratedRequestDto,
       );
+      return this.generatedRequestRepository.find({
+        where: { id: generatedRequestId },
+      });
     } catch (error) {
       console.error('Excel updating error:', error);
       throw new InternalServerErrorException(
