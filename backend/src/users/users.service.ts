@@ -9,8 +9,7 @@ import { UserFactory } from './users.factory';
 import { UsersBuilder } from './builders/users.builder';
 
 
-// This should be a real class/interface representing a user entity
-export type User = any;
+
 
 @Injectable()
 export class UsersService {
@@ -19,7 +18,7 @@ export class UsersService {
     private usersRepository: Repository<Users>,
   ) { }
 
-  async findUsername(username: string): Promise<User | undefined> {
+  async findUsername(username: string): Promise<Users | undefined> {
     return await this.usersRepository.findOne({ where: { username: username } });
   }
 
@@ -69,7 +68,7 @@ export class UsersService {
 }
 
   async findOne(id: number): Promise < Users > {
-  const user = await this.usersRepository.findOne({ where: { uniqueId: id } });
+  const user = await this.usersRepository.findOne({ where: { id: id } });
   if(!user) {
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
@@ -78,7 +77,7 @@ export class UsersService {
 }
 
   async update(id: number, updateUserDto: UpdateUsersDto): Promise < Users > {
-  const user = await this.usersRepository.findOne({ where: { uniqueId: id } });
+  const user = await this.usersRepository.findOne({ where: { id: id } });
 
   if(!user) {
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
@@ -86,7 +85,7 @@ export class UsersService {
   
     await this.usersRepository.update(id, updateUserDto);
 
-  return this.usersRepository.findOne({ where: { uniqueId: id } });
+  return this.usersRepository.findOne({ where: { id: id } });
 }
 
 }
