@@ -1,76 +1,52 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { User } from '../types';
 
 interface AuthContextType {
   user: User | null;
-  setUser: (user: User | null) => void;
-  isAuthenticated: boolean;
-  token: string | null;
-  setToken: (token: string | null) => void;
-  checkToken: () => boolean;
+  login: (email: string, password: string) => void;
+  loginAsGuest: () => void;
+  logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  token: null,
-  setToken: () => {},
-  setUser: () => {},
-  isAuthenticated: false,
-  checkToken: () => false,
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
 
-  const checkToken = () => {
-    if (!token) return false;
-    try {
-      const tokenData = JSON.parse(atob(token.split('.')[1]));
-      const expirationTime = tokenData.exp * 60000; // Convert to milliseconds 
-      return Date.now() < expirationTime;
-    } catch (error) {
-      return false;
-    }
+  const login = (email: string, password: string) => {
+    // Simulated login
+    setUser({
+      id: '1',
+      name: 'John Doe',
+      email,
+      profilePicture: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
+    });
   };
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('token');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    if (storedToken) {
-      const parsedToken = JSON.parse(storedToken);
-      setToken(parsedToken);
-      if (!checkToken()) {
-        setToken(null);
-        setUser(null);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-      }
-    }
-  }, []);
-
-  const value = {
-    user,
-    token,
-    setToken,
-    checkToken,
-    setUser: (newUser: User | null) => {
-      setUser(newUser);
-      if (newUser) {
-        localStorage.setItem('user', JSON.stringify(newUser))
-        localStorage.setItem('token', JSON.stringify(token))
-      } else {
-        localStorage.removeItem('user'); 
-        localStorage.removeItem('token');
-      }
-    },
-    isAuthenticated: !!user && checkToken(),
+  const loginAsGuest = () => {
+    setUser({
+      id: 'guest',
+      name: 'Guest User',
+      email: 'guest@example.com',
+      profilePicture: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400',
+    });
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  const logout = () => {
+    setUser(null);
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, login, loginAsGuest, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
