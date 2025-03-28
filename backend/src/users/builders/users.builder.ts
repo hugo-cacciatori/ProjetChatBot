@@ -1,11 +1,10 @@
-import { Users } from '../entities/users.entity';
-import { GeneratedRequest } from 'src/generated-request/entities/generated-request.entity';
+import { User } from '../entities/user.entity';
 
 export class UsersBuilder {
-  private user: Users;
+  private user: User;
 
   constructor() {
-    this.user = new Users();
+    this.user = new User();
     this.user.created_At = new Date();
   }
 
@@ -34,9 +33,7 @@ export class UsersBuilder {
     return this;
   }
 
-
-
-  build(): Users {
+  build(): User {
     return this.user;
   }
 }
