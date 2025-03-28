@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { GeneratedRequestStatus } from '../utils/enum/generatedRequestStatus.enum';
 import { LlmService } from '../llm/llm.service';
 import * as XLSX from 'xlsx';
+import { QueueService } from '../GlobalModules/queue/queue.service';
 
 @Injectable()
 export class GeneratedRequestService {
@@ -14,6 +15,7 @@ export class GeneratedRequestService {
     @InjectRepository(GeneratedRequest)
     private readonly generatedRequestRepository: Repository<GeneratedRequest>,
     private readonly llmService: LlmService,
+    private readonly queueService: QueueService,
   ) {}
 
   async fileParser(fileBuffer: Buffer, dto: CreateGeneratedRequestDto) {
@@ -21,24 +23,46 @@ export class GeneratedRequestService {
       const workbook = XLSX.read(fileBuffer, { type: 'buffer', WTF: true });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(sheet);
-      const results = [];
 
       for (const row of rows) {
-        const generatedRequest = await this.generateRequest({
+        await this.generateRequest({
           status: GeneratedRequestStatus.PENDING,
           ...dto,
         });
 
-        const llmResult = await this.llmService.request(row);
-        results.push({ id: generatedRequest.id, llmResult });
+        this.queueService.enqueue('generatedRequest', {
+          row,
+          dto,
+        });
       }
-      return results;
+      return { message: `${rows.length} items enqueued.` };
     } catch (error) {
       console.error('Excel processing error:', error);
       throw new InternalServerErrorException(
         'an error occurred while created request',
         error,
       );
+    }
+  }
+
+  async processRequest() {
+    const job = this.queueService.peek();
+    if (!job) return;
+
+    const { dto, row } = job.data;
+
+    try {
+      const generatedRequest = await this.generateRequest({
+        status: GeneratedRequestStatus.PENDING,
+        ...dto,
+      });
+
+      const llmResult = await this.llmService.request(row);
+
+      this.queueService.dequeue();
+      return { id: generatedRequest.id, llmResult };
+    } catch (error) {
+      console.error('Failed to process job:', error);
     }
   }
 
