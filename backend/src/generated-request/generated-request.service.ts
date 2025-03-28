@@ -8,6 +8,7 @@ import { GeneratedRequestStatus } from '../utils/enum/generatedRequestStatus.enu
 import { LlmService } from '../llm/llm.service';
 import * as XLSX from 'xlsx';
 import { QueueService } from '../GlobalModules/queue/queue.service';
+import { GeneratedRequestBuilder } from './builders/generatedRequest.builder';
 
 @Injectable()
 export class GeneratedRequestService {
@@ -25,15 +26,8 @@ export class GeneratedRequestService {
       const rows = XLSX.utils.sheet_to_json(sheet);
 
       for (const row of rows) {
-        await this.generateRequest({
-          status: GeneratedRequestStatus.PENDING,
-          ...dto,
-        });
-
-        this.queueService.enqueue('generatedRequest', {
-          row,
-          dto,
-        });
+        const builder = new GeneratedRequestBuilder(this.queueService, this);
+        await builder.withDto(dto).withRow(row).buildAndQueue();
       }
       return { message: `${rows.length} items enqueued.` };
     } catch (error) {
@@ -45,22 +39,22 @@ export class GeneratedRequestService {
     }
   }
 
-  async processRequest() {
+  async processNextRequest() {
     const job = this.queueService.peek();
     if (!job) return;
 
     const { dto, row } = job.data;
 
     try {
-      const generatedRequest = await this.generateRequest({
-        status: GeneratedRequestStatus.PENDING,
+      const generatedRequest = await this.update(dto.id, {
+        status: GeneratedRequestStatus.IN_PROGRESS,
         ...dto,
       });
 
       const llmResult = await this.llmService.request(row);
 
       this.queueService.dequeue();
-      return { id: generatedRequest.id, llmResult };
+      return { id: generatedRequest[0].id, llmResult };
     } catch (error) {
       console.error('Failed to process job:', error);
     }
@@ -100,10 +94,13 @@ export class GeneratedRequestService {
     updateGeneratedRequestDto: UpdateGeneratedRequestDto,
   ) {
     try {
-      return await this.generatedRequestRepository.update(
+      await this.generatedRequestRepository.update(
         generatedRequestId,
         updateGeneratedRequestDto,
       );
+      return this.generatedRequestRepository.find({
+        where: { id: generatedRequestId },
+      });
     } catch (error) {
       console.error('Excel updating error:', error);
       throw new InternalServerErrorException(
