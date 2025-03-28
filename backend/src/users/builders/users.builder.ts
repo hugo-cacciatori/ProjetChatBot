@@ -1,5 +1,5 @@
 import { Users } from '../entities/users.entity';
-import { GeneratedRequest } from 'src/generated-request/entities/generated-request.entity';
+import { GeneratedRequest } from '../../generated-request/entities/generated-request.entity';
 
 export class UsersBuilder {
   private user: Users;
@@ -33,8 +33,6 @@ export class UsersBuilder {
     this.user.lastConnection_At = lastConnectionAt;
     return this;
   }
-
-
 
   build(): Users {
     return this.user;

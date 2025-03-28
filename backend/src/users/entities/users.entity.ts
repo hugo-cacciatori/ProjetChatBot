@@ -1,36 +1,43 @@
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { GeneratedRequest } from 'src/generated-request/entities/generated-request.entity';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { GeneratedRequest } from '../../generated-request/entities/generated-request.entity';
 
 @Entity()
-export class Users{
+export class Users {
+  @PrimaryGeneratedColumn()
+  id: number;
 
+  @Column()
+  username: string;
 
+  @Column()
+  password: string;
 
-    @PrimaryGeneratedColumn()
-    id: number;
+  @Column()
+  firstName: string;
 
-    @Column()
-    username : string
+  @Column()
+  lastName: string;
 
-    @Column()
-    password : string
+  @CreateDateColumn()
+  created_At: Date;
 
-    @Column()
-    firstName: string;
+  @UpdateDateColumn()
+  updated_At: Date;
 
-    @Column()
-    lastName: string;
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  lastConnection_At: Date;
 
-    @CreateDateColumn()
-    created_At: Date;
-
-    @UpdateDateColumn()
-    updated_At: Date;
-
-    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-    lastConnection_At: Date;
-
-    @OneToMany(() => GeneratedRequest, (generatedRequest) => generatedRequest.id, { cascade: true, nullable: true })
-    request: GeneratedRequest | null;
-
+  @OneToMany(
+    () => GeneratedRequest,
+    (generatedRequest) => generatedRequest.id,
+    { cascade: true, nullable: true },
+  )
+  request: GeneratedRequest | null;
 }
