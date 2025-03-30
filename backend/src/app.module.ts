@@ -8,6 +8,7 @@ import { GeneratedRequestModule } from './generated-request/generated-request.mo
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LlmModule } from './llm/llm.module';
 import { ProductModule } from './product/product.module';
+import { TagModule } from './tag/tag.module';
 import dbConfiguration from './config/db.config';
 
 @Module({
@@ -28,6 +29,7 @@ import dbConfiguration from './config/db.config';
     GeneratedRequestModule,
     LlmModule,
     ProductModule,
+    TagModule,
   ],
   providers: [AppService],
 })

@@ -1,19 +1,16 @@
-import { Tag } from '../../tag/entities/tag.entity';
-import { GeneratedRequest } from '../../generated-request/entities/generated-request.entity';
+import { Product } from '../../product/entities/product.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   Index,
-  JoinTable,
   ManyToMany,
-  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
-export class Product {
+export class Tag {
   @PrimaryGeneratedColumn()
   id!: number;
 
@@ -21,17 +18,8 @@ export class Product {
   @Column({ length: 300 })
   name: string;
 
-  @Column({ type: 'text' })
-  description: string;
-
-  @ManyToOne(() => GeneratedRequest, (request) => request.products, {
-    cascade: true,
-  })
-  request: GeneratedRequest;
-
-  @ManyToMany(() => Tag, (tag) => tag.products, { cascade: true })
-  @JoinTable()
-  tags: Tag[];
+  @ManyToMany(() => Product, (product) => product.tags)
+  products: Product[];
 
   @CreateDateColumn({
     type: 'timestamp',
