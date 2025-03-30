@@ -9,7 +9,7 @@ import {
 import { GeneratedRequest } from '../../generated-request/entities/generated-request.entity';
 
 @Entity()
-export class Users {
+export class User {
   @PrimaryGeneratedColumn()
   id: number;
 

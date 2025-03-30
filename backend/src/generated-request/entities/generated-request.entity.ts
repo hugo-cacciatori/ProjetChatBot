@@ -1,6 +1,7 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { GeneratedRequestStatus } from '../../utils/enum/generatedRequestStatus.enum';
 import { Product } from '../../product/entities/product.entity';
+import { User } from '../../users/entities/user.entity';
 
 @Entity()
 export class GeneratedRequest {
@@ -13,5 +14,6 @@ export class GeneratedRequest {
   @OneToMany(() => Product, (product) => product.request)
   products: Product[];
 
-  //TODO: link to user
+  @OneToMany(() => User, (User) => User.id)
+  users: User[];
 }

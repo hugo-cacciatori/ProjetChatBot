@@ -7,20 +7,20 @@ import {
   Patch,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { RegisterAccountRequestDto } from '../auth/dto/register-account-request.dto';
+import { RegisterAccountRequestDto } from 'src/auth/dto/register-account-request.dto';
 import { Repository } from 'typeorm';
-import { Users } from './entities/users.entity';
+import { User } from './entities/user.entity';
 import { UpdateUsersDto } from './dto/update-users.dto';
 import { UsersBuilder } from './builders/users.builder';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(Users)
-    private usersRepository: Repository<Users>,
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
   ) {}
 
-  async findUsername(username: string): Promise<Users | undefined> {
+  async findUsername(username: string): Promise<User | undefined> {
     return await this.usersRepository.findOne({
       where: { username: username },
     });
@@ -55,11 +55,11 @@ export class UsersService {
     }
   }
 
-  async findAll(): Promise<Users[]> {
+  async findAll(): Promise<User[]> {
     return this.usersRepository.find();
   }
 
-  async findOne(id: number): Promise<Users> {
+  async findOne(id: number): Promise<User> {
     const user = await this.usersRepository.findOne({ where: { id: id } });
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
@@ -68,7 +68,7 @@ export class UsersService {
     return user;
   }
 
-  async update(id: number, updateUserDto: UpdateUsersDto): Promise<Users> {
+  async update(id: number, updateUserDto: UpdateUsersDto): Promise<User> {
     const user = await this.usersRepository.findOne({ where: { id: id } });
 
     if (!user) {
