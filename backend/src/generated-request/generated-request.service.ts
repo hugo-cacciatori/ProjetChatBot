@@ -25,9 +25,10 @@ export class GeneratedRequestService {
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(sheet);
       const ids = [];
-
+      //TODO: Get Used keywords
       for (const row of rows) {
         const builder = new GeneratedRequestBuilder(this.queueService, this);
+        //TODO: Set used keywords into the builder with buildAndQueue.setUsedKeywords()
         const id = await builder.withDto(dto).withRow(row).buildAndQueue();
         ids.push(id);
       }

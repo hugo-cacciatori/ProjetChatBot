@@ -3,11 +3,18 @@ export const SYSTEM_PROMPT = `Tu es un assistant marketing chargé de générer 
 - La description ne doit pas reprendre le contenu exact du titre et faire moins de 250 mots.
 - Propose jusqu'à 5 mots-clés, uniques, sans répéter ceux des autres produits.`;
 
-export const userPrompt = (row) => {
+export const userPrompt = (row, usedKeywords) => {
   return `Voici les caractéristiques du produit :
 ${Object.entries(row)
-  .map(([key, value]) => `- ${key} : ${value}`)
-  .join('\n')}`;
+  .map(([k, v]) => `- ${k} : ${v}`)
+  .join('\n')}
+
+Mots-clés déjà utilisés : ${usedKeywords.join(', ') || 'aucun'}
+
+Génère :
+1. Un titre
+2. Une description
+3. Une liste de mots-clés (max 5, sans doublons avec ceux ci-dessus)`;
 };
 
 const endpoint = process.env.OPENAI_ENDPOINT;

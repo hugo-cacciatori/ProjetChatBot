@@ -3,7 +3,14 @@ import { SYSTEM_PROMPT, url, userPrompt } from './utils';
 
 @Injectable()
 export class LlmService {
-  async request(row: any): Promise<string> {
+  async request(
+    row: any,
+    usedKeywords: string[] = [],
+  ): Promise<{
+    title: string;
+    description: string;
+    keywords: string[];
+  }> {
     try {
       const response = await fetch(url, {
         method: 'POST',
@@ -14,7 +21,7 @@ export class LlmService {
         body: JSON.stringify({
           messages: [
             { role: 'system', content: SYSTEM_PROMPT },
-            { role: 'user', content: userPrompt(row) },
+            { role: 'user', content: userPrompt(row, usedKeywords) },
           ],
           max_tokens: 500,
           temperature: 0.7,
