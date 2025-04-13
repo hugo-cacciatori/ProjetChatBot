@@ -7,6 +7,8 @@ import { ExampleModule } from './example/example.module';
 import { GeneratedRequestModule } from './generated-request/generated-request.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LlmModule } from './llm/llm.module';
+import { ProductModule } from './product/product.module';
+import { TagModule } from './tag/tag.module';
 import { QueueModule } from './GlobalModules/queue/queue.module';
 import dbConfiguration from './config/db.config';
 
@@ -27,6 +29,8 @@ import dbConfiguration from './config/db.config';
     ExampleModule,
     GeneratedRequestModule,
     LlmModule,
+    ProductModule,
+    TagModule,
     QueueModule,
   ],
   providers: [AppService],
