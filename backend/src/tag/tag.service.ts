@@ -9,10 +9,11 @@ import { UpdateTagDto } from './dto/update-tag.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Tag } from './entities/tag.entity';
 import { Repository } from 'typeorm';
+import { CustomLogger } from 'src/utils/Logger/CustomLogger.service';
 
 @Injectable()
 export class TagService {
-  private readonly logger = new Logger(TagService.name);
+  private readonly logger = new CustomLogger();
 
   constructor(
     @InjectRepository(Tag)
@@ -21,6 +22,7 @@ export class TagService {
 
   async create(createTagDto: CreateTagDto): Promise<Tag> {
     try {
+      this.logger.log(`Creating new tag with name: ${createTagDto.name}`);
       const tag = this.tagRepository.create(createTagDto);
       return await this.tagRepository.save(tag);
     } catch (error) {

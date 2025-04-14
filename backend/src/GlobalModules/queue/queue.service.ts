@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { GeneratedRequestService } from '../../generated-request/generated-request.service';
 import { QueueJob } from '../../generated-request/utils';
 import { v4 as uuidv4 } from 'uuid';
+import { CustomLogger } from 'src/utils/Logger/CustomLogger.service';
 
 @Injectable()
 export class QueueService implements OnModuleInit {
@@ -9,6 +10,7 @@ export class QueueService implements OnModuleInit {
   private jobNotifier: () => void = () => {};
   private jobNotifierPromise: Promise<void> = Promise.resolve();
   private isRunning = false;
+  private readonly logger = new CustomLogger();
 
   constructor(
     @Inject(forwardRef(() => GeneratedRequestService))
@@ -28,6 +30,9 @@ export class QueueService implements OnModuleInit {
     };
     this.jobQueue.push(job);
 
+    this.logger.verbose(
+      `Enqueued job of type ${type} with ID ${job.id} at ${job.createdAt.toISOString()}`,
+    );
     // Notify processor that a new job is available
     this.jobNotifier();
     return job;
@@ -49,12 +54,20 @@ export class QueueService implements OnModuleInit {
         switch (job.type) {
           case 'generatedRequest':
             await this.generatedRequestService.processNextRequest(job.data);
+            this.logger.log(
+              `Processed job of type ${job.type} with ID ${job.id}`,
+            );
             break;
           default:
-            console.warn(`Unknown job type: ${job.type}`);
+            this.logger.warn(
+              `Unknown job type: ${job.type} for job ID ${job.id}`,
+            );
         }
       } catch (err) {
-        console.error('Error processing job', err);
+        this.logger.error(
+          `Error processing job of type ${job.type} with ID ${job.id}: ${err.message}`,
+          'QueueService',
+        );
       }
     }
   }

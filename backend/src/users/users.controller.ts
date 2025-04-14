@@ -9,9 +9,11 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUsersDto } from './dto/update-users.dto';
+import { CustomLogger } from 'src/utils/Logger/CustomLogger.service';
 
 @Controller('users')
 export class UsersController {
+  private readonly logger = new CustomLogger();
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
@@ -55,12 +57,17 @@ export class UsersController {
     try {
       const updatedUser = await this.usersService.update(id, updateUserDto);
       updatedUser.password = undefined;
+      this.logger.log(`User with id ${id} updated successfully`);
       return {
         statusCode: HttpStatus.OK,
         message: 'User updated successfully',
         data: updatedUser,
       };
     } catch (error) {
+      this.logger.error(
+        `Error updating user with id ${id}: ${error.message}`,
+        'UsersController',
+      );
       throw new HttpException(
         error.message,
         error.status || HttpStatus.INTERNAL_SERVER_ERROR,
