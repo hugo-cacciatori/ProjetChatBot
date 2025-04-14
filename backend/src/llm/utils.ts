@@ -21,4 +21,4 @@ const endpoint = process.env.OPENAI_ENDPOINT;
 const deployment = process.env.OPENAI_DEPLOYMENT_NAME;
 const version = process.env.OPENAI_API_VERSION;
 
-export const url = `${endpoint}/openai/deployments/${deployment}/chat/completions?api-version=${version}`;
+export const url = `https://az-dev-swc-epsi-cog-002-xfq.openai.azure.com/openai/deployments/${deployment}/chat/completions?api-version=${version}`;

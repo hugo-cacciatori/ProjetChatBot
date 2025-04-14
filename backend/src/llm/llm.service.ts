@@ -35,6 +35,8 @@ export class LlmService {
       }
 
       const data = await response.json();
+      console.log('data :', data);
+      //TODO: UPDATE THE ARRAY OF TAGS WITH NEW TAGS
       return data.choices[0].message.content;
     } catch (error) {
       console.error('LlmService error:', error);
