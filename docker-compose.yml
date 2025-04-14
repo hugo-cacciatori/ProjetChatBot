@@ -15,9 +15,7 @@ services:
       - app-network
 
   frontend:
-    build:
-      context: frontend
-      dockerfile: Dockerfile
+    build: ./frontend
     depends_on:
       - backend
     restart: unless-stopped

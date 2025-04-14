@@ -8,6 +8,8 @@ import { SignInRequestDto } from './dto/signIn-request.dto';
 
 @Controller('auth')
 export class AuthController {
+
+  private readonly logger = new CustomLogger();
   constructor(private authService: AuthService) {}
 
   @HttpCode(HttpStatus.OK)
@@ -28,6 +30,8 @@ export class AuthController {
   // create a new user
   @Post('register')
   register(@Body() registerAccountRequestDto: RegisterAccountRequestDto) {
+    this.logger.log(`new user attempting to register with username: ${registerAccountRequestDto.username}`);
+    
     return this.authService.register(registerAccountRequestDto);
   }
 }

@@ -8,6 +8,12 @@ export class GeneratedRequestBuilder {
   private row: any;
   private queueService: QueueService;
   private generatedRequestService: GeneratedRequestService;
+  private usedKeywords: string[] = [];
+
+  setUsedKeywords(keywords: string[]) {
+    this.usedKeywords = keywords;
+    return this;
+  }
 
   constructor(
     queueService: QueueService,
@@ -29,6 +35,7 @@ export class GeneratedRequestBuilder {
 
   async buildAndQueue(): Promise<number> {
     const requestContent = this.dto ? this.dto : this.row;
+    //TODO: add used keyword to the content
     const generatedRequest = await this.generatedRequestService.generateRequest(
       {
         status: GeneratedRequestStatus.PENDING,
@@ -39,6 +46,7 @@ export class GeneratedRequestBuilder {
     this.queueService.enqueue('generatedRequest', {
       row: this.row,
       dto: this.dto,
+      usedKeywords: this.usedKeywords,
       generatedRequestId: generatedRequest.id,
     });
     return generatedRequest.id;
