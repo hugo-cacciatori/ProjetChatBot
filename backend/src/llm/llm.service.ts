@@ -11,6 +11,7 @@ export class LlmService {
     description: string;
     keywords: string[];
   }> {
+    //TODO : Retry et breaker basé sur notre cotat de tokens
     try {
       const response = await fetch(url, {
         method: 'POST',

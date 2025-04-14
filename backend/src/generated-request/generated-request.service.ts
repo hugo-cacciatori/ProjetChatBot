@@ -19,6 +19,7 @@ export class GeneratedRequestService {
     private readonly queueService: QueueService,
   ) {}
 
+  //TODO: Check si le fichier est bien un excel / le format du excel
   async fileParser(fileBuffer: Buffer, dto: CreateGeneratedRequestDto) {
     try {
       const workbook = XLSX.read(fileBuffer, { type: 'buffer', WTF: true });
