@@ -2,10 +2,12 @@ import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useChat } from '../context/ChatContext';
-import ChatSidebar from '../components/chat/ChatSideBar';
+
 import { Chat as ChatType } from '../types/common';
-import EmptyState from '../components/chat/EmptyState';
-import Header from '../components/chat/Header';
+import ChatSidebar from '../features/chat/ChatSideBar';
+import Header from '../features/chat/Header';
+import EmptyState from '../features/chat/EmptyState';
+
 
 const ChatList: React.FC = () => {
   const { user, logout } = useAuth();
