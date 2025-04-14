@@ -1,4 +1,6 @@
 import {
+  forwardRef,
+  Inject,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -8,10 +10,9 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
-import { DeepPartial, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { GeneratedRequestService } from '../generated-request/generated-request.service';
 import { TagService } from '../tag/tag.service';
-import { ProductBuilder } from './builders/product.builder';
 
 @Injectable()
 export class ProductService {
@@ -20,19 +21,26 @@ export class ProductService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+
+    @Inject(forwardRef(() => GeneratedRequestService))
     private readonly generatedRequestService: GeneratedRequestService,
+
     private readonly tagService: TagService,
   ) {}
 
-  async create(productDto: CreateProductDto): Promise<Product> {
+  async create(createProductDto: CreateProductDto) {
     try {
-      const product = this.productRepository.create(productDto);
-
-      return await this.updateRelations(product, productDto);
+      const product = this.productRepository.create(createProductDto);
+      return await this.productRepository.save(product);
     } catch (error) {
-      throw this.handleServerError(
-        'An error occcured while creating a product',
+      if (error?.code === 'ER_DUP_ENTRY') {
+        return await this.productRepository.findOne({
+          where: { name: createProductDto.name },
+        });
+      }
+      this.handleServerError(
         error,
+        'An error occurred while creating a product',
       );
     }
   }

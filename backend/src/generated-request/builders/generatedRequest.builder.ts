@@ -2,6 +2,7 @@ import { CreateGeneratedRequestDto } from '../dto/create-generated-request.dto';
 import { QueueService } from '../../GlobalModules/queue/queue.service';
 import { GeneratedRequestService } from '../generated-request.service';
 import { GeneratedRequestStatus } from '../../utils/enum/generatedRequestStatus.enum';
+import { InternalServerErrorException } from '@nestjs/common';
 
 export class GeneratedRequestBuilder {
   private dto: CreateGeneratedRequestDto;
@@ -34,21 +35,26 @@ export class GeneratedRequestBuilder {
   }
 
   async buildAndQueue(): Promise<number> {
-    const requestContent = this.dto ? this.dto : this.row;
-    //TODO: add used keyword to the content
-    const generatedRequest = await this.generatedRequestService.generateRequest(
-      {
-        status: GeneratedRequestStatus.PENDING,
-        ...requestContent,
-      },
-    );
-
-    this.queueService.enqueue('generatedRequest', {
-      row: this.row,
-      dto: this.dto,
-      usedKeywords: this.usedKeywords,
-      generatedRequestId: generatedRequest.id,
-    });
-    return generatedRequest.id;
+    try {
+      const requestContent = this.dto ? this.dto : this.row;
+      //TODO: add used keyword to the content
+      const generatedRequest =
+        await this.generatedRequestService.generateRequest({
+          status: GeneratedRequestStatus.PENDING,
+          ...requestContent,
+        });
+      this.queueService.enqueue('generatedRequest', {
+        row: this.row,
+        dto: this.dto,
+        usedKeywords: this.usedKeywords,
+        generatedRequestId: generatedRequest.id,
+      });
+      return generatedRequest.id;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Error into build and queue',
+        error,
+      );
+    }
   }
 }
