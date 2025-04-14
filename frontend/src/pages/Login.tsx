@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import LoginForm from '../components/auth/LoginForm';
-import GuestLoginButton from '../components/auth/GuestLoginButton';
-import SignUpLink from '../components/auth/SignUpLink';
+import LoginForm from '../features/auth/LoginForm';
+import GuestLoginButton from '../features/auth/GuestLoginButton';
+import SignUpLink from '../features/auth/SignUpLink';
+
 
 interface LoginFormData {
   email: string;
