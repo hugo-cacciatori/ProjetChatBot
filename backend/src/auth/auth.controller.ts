@@ -3,6 +3,8 @@ import { Body, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from './auth.guard';
 import { RegisterAccountRequestDto } from './dto/register-account-request.dto';
+import { CustomLogger } from 'src/utils/Logger/CustomLogger.service';
+import { SignInRequestDto } from './dto/signIn-request.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -10,7 +12,10 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('login')
-  signIn(@Body() signInDto: Record<string, any>) {
+  signIn(@Body() signInDto: SignInRequestDto) {
+    this.logger.log(
+      `User attempting to sign in with username: ${signInDto.username}`,
+    );
     return this.authService.signIn(signInDto.username, signInDto.password);
   }
 
