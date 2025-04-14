@@ -8,6 +8,7 @@ import { GeneratedRequestStatus } from '../utils/enum/generatedRequestStatus.enu
 import { LlmService } from '../llm/llm.service';
 import * as XLSX from 'xlsx';
 import { QueueService } from '../GlobalModules/queue/queue.service';
+import { GeneratedRequestBuilder } from './builders/generatedRequest.builder';
 
 @Injectable()
 export class GeneratedRequestService {
@@ -23,19 +24,14 @@ export class GeneratedRequestService {
       const workbook = XLSX.read(fileBuffer, { type: 'buffer', WTF: true });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(sheet);
+      const ids = [];
 
       for (const row of rows) {
-        await this.generateRequest({
-          status: GeneratedRequestStatus.PENDING,
-          ...dto,
-        });
-
-        this.queueService.enqueue('generatedRequest', {
-          row,
-          dto,
-        });
+        const builder = new GeneratedRequestBuilder(this.queueService, this);
+        const id = await builder.withDto(dto).withRow(row).buildAndQueue();
+        ids.push(id);
       }
-      return { message: `${rows.length} items enqueued.` };
+      return { message: `${ids.length} items enqueued.`, ids };
     } catch (error) {
       console.error('Excel processing error:', error);
       throw new InternalServerErrorException(
@@ -45,22 +41,24 @@ export class GeneratedRequestService {
     }
   }
 
-  async processRequest() {
-    const job = this.queueService.peek();
-    if (!job) return;
-
-    const { dto, row } = job.data;
+  async processNextRequest(data: {
+    dto: CreateGeneratedRequestDto;
+    row: any;
+    generatedRequestId: number;
+  }) {
+    const { dto, row, generatedRequestId } = data;
 
     try {
-      const generatedRequest = await this.generateRequest({
-        status: GeneratedRequestStatus.PENDING,
+      const generatedRequest = await this.update(generatedRequestId, {
+        status: GeneratedRequestStatus.IN_PROGRESS,
         ...dto,
       });
-
       const llmResult = await this.llmService.request(row);
 
-      this.queueService.dequeue();
-      return { id: generatedRequest.id, llmResult };
+      await this.generatedRequestRepository.update(generatedRequest[0].id, {
+        status: GeneratedRequestStatus.DONE,
+      });
+      return { id: generatedRequest[0].id, llmResult };
     } catch (error) {
       console.error('Failed to process job:', error);
     }
@@ -100,10 +98,13 @@ export class GeneratedRequestService {
     updateGeneratedRequestDto: UpdateGeneratedRequestDto,
   ) {
     try {
-      return await this.generatedRequestRepository.update(
+      await this.generatedRequestRepository.update(
         generatedRequestId,
         updateGeneratedRequestDto,
       );
+      return this.generatedRequestRepository.find({
+        where: { id: generatedRequestId },
+      });
     } catch (error) {
       console.error('Excel updating error:', error);
       throw new InternalServerErrorException(

@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
+import { GeneratedRequestService } from '../../generated-request/generated-request.service';
 
 interface QueueJob<T = any> {
   id: string;
@@ -9,8 +10,17 @@ interface QueueJob<T = any> {
 }
 
 @Injectable()
-export class QueueService {
+export class QueueService implements OnModuleInit {
   private queue: QueueJob[] = [];
+  private isRunning = false;
+  constructor(
+    @Inject(forwardRef(() => GeneratedRequestService))
+    private readonly generatedRequestService: GeneratedRequestService,
+  ) {}
+  onModuleInit() {
+    this.startProcessorLoop();
+  }
+  private isProcessing = false;
 
   enqueue<T = any>(type: string, data: T): QueueJob {
     const job: QueueJob<T> = {
@@ -46,5 +56,52 @@ export class QueueService {
 
   getAllJobs(): QueueJob[] {
     return [...this.queue];
+  }
+
+  private async startProcessorLoop() {
+    if (this.isRunning) return;
+
+    this.isRunning = true;
+
+    while (true) {
+      if (this.isProcessing) {
+        await this.sleep(100);
+        continue;
+      }
+
+      const job = this.dequeue();
+      if (!job) {
+        await this.sleep(100);
+        continue;
+      }
+
+      this.isProcessing = true;
+      try {
+        if (!job) {
+          await this.sleep(100);
+          continue;
+        }
+        this.isProcessing = true;
+
+        switch (job.type) {
+          case 'generatedRequest':
+            await this.generatedRequestService.processNextRequest(job.data);
+            break;
+
+          default:
+            console.warn(`Unknown job type: ${job.type}`);
+        }
+      } catch (err) {
+        console.error('Error processing job', err);
+      } finally {
+        this.isProcessing = false;
+      }
+
+      await this.sleep(100);
+    }
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
