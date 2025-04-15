@@ -55,9 +55,29 @@ const ChatRoom: React.FC = () => {
   );
 
   const onFileUpload = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
       if (!chat) return;
-      handleFileUpload(event, chat, id, updateChat);
+      const file = event.target.files?.[0];
+      if (!file) return;
+      
+      const result = await handleFileUpload(file);
+      if (!result.success) {
+        const errorMessage = createMessage(`Erreur: ${result.error}`, MESSAGE_SENDER.ASSISTANT);
+        updateChat(id!, {
+          messages: [...chat.messages, errorMessage],
+          lastMessage: `Erreur lors de l'upload du fichier`,
+        });
+        return;
+      }
+      
+      if (result.file) {
+        const systemMessage = createMessage(`Fichier uploadé: ${result.file.name}`, MESSAGE_SENDER.ASSISTANT);
+        updateChat(id!, {
+          files: [...chat.files, result.file],
+          messages: [...chat.messages, systemMessage],
+          lastMessage: `Fichier uploadé: ${result.file.name}`,
+        });
+      }
     },
     [chat, id, updateChat]
   );
