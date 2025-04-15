@@ -37,8 +37,6 @@ export class UsersService {
       let user = new UsersBuilder()
         .setUsername(registerDto.username)
         .setPassword(registerDto.password)
-        .setFirstName(registerDto.firstName)
-        .setLastName(registerDto.lastName)
         .build();
 
       await this.usersRepository.save(user);
