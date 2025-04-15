@@ -16,11 +16,15 @@ services:
 
   frontend:
     build: ./frontend
+    ports:
+      - "4000:4000"
     depends_on:
       - backend
     restart: unless-stopped
     networks:
       - app-network
+    environment:
+      - VITE_API_URL=http://backend:3000/api
 
   backend:
     build: ./backend
