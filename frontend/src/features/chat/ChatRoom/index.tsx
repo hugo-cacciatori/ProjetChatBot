@@ -8,6 +8,7 @@ import FileHistorySidebar from './components/FileHistorySidebar';
 import ChatHeader from './components/ChatHeader';
 import MessageList from './components/MessageList';
 import MessageInput from './components/MessageInput';
+import { jsonToExcel } from './utils/excelFactory';
 
 const ChatRoom: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -70,6 +71,15 @@ const ChatRoom: React.FC = () => {
               messages: [...chat.messages, systemMessage],
               lastMessage: `Fichier uploadé: ${result.file.name}`,
             });
+
+            // TODO : requête Profil
+            var user = "";
+            // TODO : requête generated-request/user.id
+            var gptReturnJsonData = "";
+            // TODO : traduction jsondata en excel
+            // var gptReturnExcelFile = jsonToExcel(gptReturnJsonData);
+            // TODO : afficher un toasty de confirmation du lancement du téléchargement du résultat
+            // TODO : lancer le téléchargement du excel
           }
         },
         onError: (error) => {
