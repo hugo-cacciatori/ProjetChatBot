@@ -120,8 +120,7 @@ const uploadFileToBackend = async (file: File): Promise<FileUploadResponse> => {
       throw new Error('Non authentifié');
     }
 
-    const apiUrl = import.meta.env.VITE_API_URL;
-    const response = await fetch(`${apiUrl}/generated-request`, { 
+    const response = await fetch(`http://localhost:3000/generated-request`, { 
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`
