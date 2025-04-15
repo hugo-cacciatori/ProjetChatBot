@@ -25,4 +25,5 @@ export interface SharedFile {
   name: string;
   url: string;
   uploadedAt: string;
+  size: string;
 }
