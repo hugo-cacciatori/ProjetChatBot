@@ -154,7 +154,6 @@ export class GeneratedRequestService {
         },
         relations: ['products', 'user'],
       });
-      console.log(toreturn);
       return toreturn;
     } catch (error) {
       this.logger.error(
