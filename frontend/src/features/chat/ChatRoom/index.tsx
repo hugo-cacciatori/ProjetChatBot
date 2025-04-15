@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useChat } from '../../../context/ChatContext';
 import { MESSAGE_SENDER } from './constants';
 import { createMessage, generateAutoReply } from './utils/messageUtils';
-import { handleFileUpload } from './utils/fileUtils';
+import { useFileUpload } from './utils/fileUtils';
 import FileHistorySidebar from './components/FileHistorySidebar';
 import ChatHeader from './components/ChatHeader';
 import MessageList from './components/MessageList';
@@ -17,6 +17,7 @@ const ChatRoom: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [newMessage, setNewMessage] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const { mutate: uploadFile, isPending: isUploading } = useFileUpload();
 
   const chat = getChat(id!);
 
@@ -60,26 +61,27 @@ const ChatRoom: React.FC = () => {
       const file = event.target.files?.[0];
       if (!file) return;
       
-      const result = await handleFileUpload(file);
-      if (!result.success) {
-        const errorMessage = createMessage(`Erreur: ${result.error}`, MESSAGE_SENDER.ASSISTANT);
-        updateChat(id!, {
-          messages: [...chat.messages, errorMessage],
-          lastMessage: `Erreur lors de l'upload du fichier`,
-        });
-        return;
-      }
-      
-      if (result.file) {
-        const systemMessage = createMessage(`Fichier uploadé: ${result.file.name}`, MESSAGE_SENDER.ASSISTANT);
-        updateChat(id!, {
-          files: [...chat.files, result.file],
-          messages: [...chat.messages, systemMessage],
-          lastMessage: `Fichier uploadé: ${result.file.name}`,
-        });
-      }
+      uploadFile(file, {
+        onSuccess: (result) => {
+          if (result.file) {
+            const systemMessage = createMessage(`Fichier uploadé: ${result.file.name}`, MESSAGE_SENDER.ASSISTANT);
+            updateChat(id!, {
+              files: [...chat.files, result.file],
+              messages: [...chat.messages, systemMessage],
+              lastMessage: `Fichier uploadé: ${result.file.name}`,
+            });
+          }
+        },
+        onError: (error) => {
+          const errorMessage = createMessage(`Erreur: ${error.message}`, MESSAGE_SENDER.ASSISTANT);
+          updateChat(id!, {
+            messages: [...chat.messages, errorMessage],
+            lastMessage: `Erreur lors de l'upload du fichier`,
+          });
+        }
+      });
     },
-    [chat, id, updateChat]
+    [chat, id, updateChat, uploadFile]
   );
 
   if (!chat) {

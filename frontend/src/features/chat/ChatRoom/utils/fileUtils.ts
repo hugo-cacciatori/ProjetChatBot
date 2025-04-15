@@ -109,51 +109,43 @@ export const processExcelFile = (
   }
 };
 
-// Fonction pour uploader un fichier au backend
-const uploadFileToBackend = async (file: File): Promise<FileUploadResponse> => {
-  try {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const token = storage.getToken();
-    if (!token) {
-      throw new Error('Non authentifié');
-    }
-
-    const apiUrl = import.meta.env.VITE_API_URL;
-    const response = await fetch(`${apiUrl}/generated-request`, { 
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      throw new Error(`Erreur serveur: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return {
-      success: true,
-      file: data.file,
-      message: data.message || 'Fichier uploadé avec succès'
-    };
-  } catch (error) {
-    console.error('Erreur lors de l\'upload du fichier:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Erreur lors de l\'upload du fichier'
-    };
-  }
-};
-
 // Hook personnalisé pour l'upload de fichiers avec React Query
 export const useFileUpload = () => {
   const queryClient = useQueryClient();
 
   return useMutation<FileUploadResponse, Error, File>({
-    mutationFn: uploadFileToBackend,
+    mutationFn: async (file: File) => {
+      const validation = validateFile(file);
+      if (!validation.isValid) {
+        throw new Error(validation.error);
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const token = storage.getToken();
+      if (!token) {
+        throw new Error('Non authentifié');
+      }
+      const response = await fetch(`http://localhost:3000/generated-request`, { 
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erreur serveur: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return {
+        success: true,
+        file: data.file,
+        message: data.message || 'Fichier uploadé avec succès'
+      };
+    },
     onSuccess: (data: FileUploadResponse) => {
       if (data.file) {
         queryClient.setQueryData(['sharedFiles'], (oldData: SharedFile[] | undefined) => {
@@ -165,49 +157,4 @@ export const useFileUpload = () => {
       console.error('Erreur lors du téléchargement du fichier:', error);
     }
   });
-};
-
-export const handleFileUpload = async (file: File): Promise<FileUploadResponse> => {
-  const validation = validateFile(file);
-  if (!validation.isValid) {
-    return {
-      success: false,
-      error: validation.error
-    };
-  }
-
-  try {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const token = storage.getToken();
-    if (!token) {
-      throw new Error('Non authentifié');
-    }
-
-    const response = await fetch(`http://localhost:3000/generated-request`, { 
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      throw new Error(`Erreur serveur: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return {
-      success: true,
-      file: data.file,
-      message: data.message || 'Fichier uploadé avec succès'
-    };
-  } catch (error) {
-    console.error('Erreur lors de l\'upload du fichier:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Erreur lors de l\'upload du fichier'
-    };
-  }
 };
