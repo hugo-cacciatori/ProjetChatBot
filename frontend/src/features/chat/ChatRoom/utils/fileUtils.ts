@@ -2,11 +2,20 @@ import * as XLSX from 'xlsx';
 import { MESSAGE_SENDER } from '../constants';
 import { createMessage } from './messageUtils';
 import { Chat, SharedFile } from '../../../../types/common';
+import CircuitBreaker from 'opossum';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 // Types pour la validation
-export interface FileValidationResult {
+interface FileValidationResult {
   isValid: boolean;
   error?: string;
+}
+
+interface FileUploadResponse {
+  success: boolean;
+  file?: SharedFile;
+  error?: string;
+  message?: string;
 }
 
 // Constantes pour la validation
@@ -15,6 +24,13 @@ const ALLOWED_TYPES = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'application/vnd.ms-excel'
 ];
+
+// Configuration du Circuit Breaker
+const breakerOptions = {
+  timeout: 3000, // 3 secondes
+  errorThresholdPercentage: 50, // 50% d'erreurs avant d'ouvrir le circuit
+  resetTimeout: 30000, // 30 secondes avant de réessayer
+};
 
 /**
  * Vérifie si un fichier est valide
@@ -100,65 +116,69 @@ export const processExcelFile = (
   }
 };
 
-export const handleFileUpload = (
-  event: React.ChangeEvent<HTMLInputElement>,
-  chat: Chat | null | undefined,
-  chatId: string | undefined,
-  updateChat: (id: string, updates: Partial<Chat>) => void
-): void => {
-  const file = event.target.files?.[0];
-  if (!file || !chat || !chatId) return;
+// Fonction pour uploader un fichier au backend
+const uploadFileToBackend = async (file: File): Promise<FileUploadResponse> => {
+  const breaker = new CircuitBreaker(async () => {
+    const formData = new FormData();
+    formData.append('file', file);
 
-  // Validation du fichier
-  const validation = validateFile(file);
-  if (!validation.isValid) {
-    const errorMessage = createMessage(`Erreur de validation: ${validation.error}`, MESSAGE_SENDER.ASSISTANT);
-    updateChat(chatId, {
-      messages: [...chat.messages, errorMessage],
-      lastMessage: `Erreur de validation du fichier`,
+    const apiUrl = import.meta.env.VITE_API_URL;
+    const response = await fetch(`${apiUrl}/generated-request`, { 
+      method: 'POST',
+      body: formData,
     });
-    return;
-  }
 
-  // Upload du fichier au backend
-  uploadFileToBackend(file).then((result) => {
-    if (!result.success) {
-      const errorMessage = createMessage(`Erreur d'upload: ${result.message}`, MESSAGE_SENDER.ASSISTANT);
-      updateChat(chatId, {
-        messages: [...chat.messages, errorMessage],
-        lastMessage: `Erreur d'upload du fichier`,
-      });
-      return;
+    if (!response.ok) {
+      throw new Error(`Erreur serveur: ${response.status}`);
     }
 
-    const reader = new FileReader();
-    
-    reader.onload = (e) => {
-      try {
-        processExcelFile(e, file, chat, chatId, updateChat);
-      } catch (error) {
-        console.error('Erreur lors du traitement du fichier Excel:', error);
-        const errorMessage = createMessage(`Erreur lors du traitement du fichier: ${error instanceof Error ? error.message : 'Erreur inconnue'}`, MESSAGE_SENDER.ASSISTANT);
-        updateChat(chatId, {
-          messages: [...chat.messages, errorMessage],
-          lastMessage: `Erreur lors du traitement du fichier`,
+    const data = await response.json();
+    return {
+      success: true,
+      file: data.file,
+      message: data.message || 'Fichier uploadé avec succès'
+    };
+  }, breakerOptions);
+
+  try {
+    return await breaker.fire();
+  } catch (error) {
+    console.error('Erreur lors de l\'upload du fichier:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur lors de l\'upload du fichier'
+    };
+  }
+};
+
+// Hook personnalisé pour l'upload de fichiers avec React Query
+export const useFileUpload = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<FileUploadResponse, Error, File>({
+    mutationFn: uploadFileToBackend,
+    onSuccess: (data: FileUploadResponse) => {
+      if (data.file) {
+        queryClient.setQueryData(['sharedFiles'], (oldData: SharedFile[] | undefined) => {
+          return oldData ? [...oldData, data.file] : [data.file];
         });
       }
-    };
-    
-    reader.onerror = () => {
-      console.error('Erreur de lecture du fichier');
-      const errorMessage = createMessage('Erreur lors de la lecture du fichier. Veuillez réessayer.', MESSAGE_SENDER.ASSISTANT);
-      updateChat(chatId, {
-        messages: [...chat.messages, errorMessage],
-        lastMessage: `Erreur de lecture du fichier`,
-      });
-    };
-    reader.readAsBinaryString(file);
+    },
+    onError: (error: Error) => {
+      console.error('Erreur lors du téléchargement du fichier:', error);
+    }
   });
 };
 
-export const uploadFileToBackend = async (file: File): Promise<{ success: boolean; message: string }> => {
+export const handleFileUpload = async (file: File): Promise<FileUploadResponse> => {
+  const validation = validateFile(file);
+  if (!validation.isValid) {
+    return {
+      success: false,
+      error: validation.error
+    };
+  }
+
   try {
     const formData = new FormData();
     formData.append('file', file);
@@ -173,16 +193,17 @@ export const uploadFileToBackend = async (file: File): Promise<{ success: boolea
       throw new Error(`Erreur serveur: ${response.status}`);
     }
 
-    await response.json();
+    const data = await response.json();
     return {
       success: true,
-      message: 'Fichier uploadé avec succès'
+      file: data.file,
+      message: data.message || 'Fichier uploadé avec succès'
     };
   } catch (error) {
     console.error('Erreur lors de l\'upload du fichier:', error);
     return {
       success: false,
-      message: error instanceof Error ? error.message : 'Erreur lors de l\'upload du fichier'
+      error: error instanceof Error ? error.message : 'Erreur lors de l\'upload du fichier'
     };
   }
 };
