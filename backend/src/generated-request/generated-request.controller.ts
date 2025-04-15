@@ -14,6 +14,7 @@ import { UpdateGeneratedRequestDto } from './dto/update-generated-request.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateGeneratedRequestDto } from './dto/create-generated-request.dto';
 import { Express } from 'express';
+import { ExcelValidationInterceptor } from '../Interceptor/excel-validation.interceptor';
 @Controller('generated-request')
 export class GeneratedRequestController {
   constructor(
@@ -21,7 +22,7 @@ export class GeneratedRequestController {
   ) {}
 
   @Post()
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file'), new ExcelValidationInterceptor())
   async parseExcelFile(
     @UploadedFile() file: Express.Multer.File,
     @Body() dto: CreateGeneratedRequestDto,

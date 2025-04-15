@@ -21,16 +21,17 @@ export class TagService {
 
   async create(createTagDto: CreateTagDto): Promise<Tag> {
     try {
-      const tag = this.tagRepository.create(createTagDto);
-      return await this.tagRepository.save(tag);
+      const result = await this.tagRepository.upsert(createTagDto, ['name']);
+      const id = result.identifiers?.[0]?.id;
+      return await this.tagRepository.findOneByOrFail({ id });
     } catch (error) {
+      this.logger.error('Tag creation failed:', error);
       throw this.handleServerError(
-        'An error occured while creating a tag',
+        'An error occurred while upserting a tag',
         error,
       );
     }
   }
-
   async findAll(): Promise<Tag[]> {
     return await this.tagRepository.find().catch((error) => {
       throw this.handleServerError(
