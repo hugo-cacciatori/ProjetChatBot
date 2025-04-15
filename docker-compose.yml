@@ -15,14 +15,16 @@ services:
       - app-network
 
   frontend:
-    build:
-      context: frontend
-      dockerfile: Dockerfile
+    build: ./frontend
+    ports:
+      - "4000:4000"
     depends_on:
       - backend
     restart: unless-stopped
     networks:
       - app-network
+    environment:
+      - VITE_API_URL=http:localhost//${BACKEND_PORT}/api
 
   backend:
     build: ./backend

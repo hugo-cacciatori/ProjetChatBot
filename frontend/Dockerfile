@@ -1,12 +1,12 @@
 FROM node:20-alpine
 WORKDIR /app
 
+RUN npm install --global serve
+
 COPY package*.json ./
 RUN npm ci
 
 COPY . .
-
-RUN npm install --global serve
 
 RUN npm run build
 
