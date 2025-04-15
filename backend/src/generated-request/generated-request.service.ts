@@ -1,4 +1,9 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { CreateGeneratedRequestDto } from './dto/create-generated-request.dto';
 import { UpdateGeneratedRequestDto } from './dto/update-generated-request.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,27 +14,31 @@ import { LlmService } from '../llm/llm.service';
 import * as XLSX from 'xlsx';
 import { QueueService } from '../GlobalModules/queue/queue.service';
 import { GeneratedRequestBuilder } from './builders/generatedRequest.builder';
+import { ProductService } from '../product/product.service';
+import { TagService } from '../tag/tag.service';
+import { CustomLogger } from '../utils/Logger/CustomLogger.service';
 
 @Injectable()
 export class GeneratedRequestService {
+  logger = new CustomLogger();
   constructor(
     @InjectRepository(GeneratedRequest)
     private readonly generatedRequestRepository: Repository<GeneratedRequest>,
     private readonly llmService: LlmService,
     private readonly queueService: QueueService,
+    @Inject(forwardRef(() => ProductService))
+    private readonly productService: ProductService,
+    private readonly tagService: TagService,
   ) {}
 
-  //TODO: Check si le fichier est bien un excel / le format du excel
   async fileParser(fileBuffer: Buffer, dto: CreateGeneratedRequestDto) {
     try {
       const workbook = XLSX.read(fileBuffer, { type: 'buffer', WTF: true });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(sheet);
-      const ids = [];
-      //TODO: Get Used keywords
+      const ids: number[] = [];
       for (const row of rows) {
         const builder = new GeneratedRequestBuilder(this.queueService, this);
-        //TODO: Set used keywords into the builder with buildAndQueue.setUsedKeywords()
         const id = await builder.withDto(dto).withRow(row).buildAndQueue();
         ids.push(id);
       }
@@ -57,23 +66,44 @@ export class GeneratedRequestService {
       });
       const llmResult = await this.llmService.request(row);
 
-      await this.generatedRequestRepository.update(generatedRequest[0].id, {
+      const listOfTags: number[] = [];
+      for (const keyword of llmResult.keywords) {
+        const tag = await this.tagService.create({
+          name: keyword,
+        });
+        if (!tag || !tag.id) {
+          this.logger.warn(
+            `Tag creation returned null for keyword: ${keyword}`,
+          );
+          throw new InternalServerErrorException('Error creating tag', keyword);
+        }
+        listOfTags.push(tag.id);
+      }
+      await this.productService.create({
+        name: llmResult.title,
+        description: llmResult.description,
+        requestId: data.generatedRequestId,
+        tagIds: listOfTags,
+      });
+      await this.update(data.generatedRequestId, {
         status: GeneratedRequestStatus.DONE,
       });
-      return { id: generatedRequest[0].id, llmResult };
+      return { id: generatedRequest.id, llmResult };
     } catch (error) {
-      console.error('Failed to process job:', error);
+      this.logger.error('Failed to process job:', error);
+      throw new InternalServerErrorException('error :', error);
     }
   }
 
   async generateRequest(createGeneratedRequestDto: CreateGeneratedRequestDto) {
     try {
-      const generatedRequest = this.generatedRequestRepository.create(
-        createGeneratedRequestDto,
-      );
+      const generatedRequest = this.generatedRequestRepository.create({
+        ...createGeneratedRequestDto,
+        user: { id: createGeneratedRequestDto.userId },
+      });
       return await this.generatedRequestRepository.save(generatedRequest);
     } catch (error) {
-      console.error('Excel generating request:', error);
+      this.logger.error('Excel generating request:', error);
       throw new InternalServerErrorException(
         'an error occurred while generateRequest',
         error,
@@ -87,7 +117,7 @@ export class GeneratedRequestService {
         id: generatedRequestId,
       });
     } catch (error) {
-      console.error('error finding file:', error);
+      this.logger.error('error finding file:', error);
       throw new InternalServerErrorException(
         `an error occurred while finding request with id ${generatedRequestId}`,
         error,
@@ -100,17 +130,34 @@ export class GeneratedRequestService {
     updateGeneratedRequestDto: UpdateGeneratedRequestDto,
   ) {
     try {
-      await this.generatedRequestRepository.update(
-        generatedRequestId,
-        updateGeneratedRequestDto,
-      );
-      return this.generatedRequestRepository.find({
-        where: { id: generatedRequestId },
+      await this.generatedRequestRepository.update(generatedRequestId, {
+        status: updateGeneratedRequestDto.status,
+      });
+
+      return await this.generatedRequestRepository.findOneBy({
+        id: generatedRequestId,
       });
     } catch (error) {
-      console.error('Excel updating error:', error);
+      this.logger.error('Excel updating error:', error);
       throw new InternalServerErrorException(
         `an error occurred while updating request with id ${generatedRequestId}`,
+        error,
+      );
+    }
+  }
+
+  async findAllRequestByUserId(userId: number) {
+    try {
+      const toreturn = await this.generatedRequestRepository.find({
+        where: {
+          user: { id: userId },
+        },
+        relations: ['products', 'user'],
+      });
+      return toreturn;
+    } catch (error) {
+      this.logger.error(
+        'an error occurred while getting all request for user',
         error,
       );
     }
@@ -120,7 +167,7 @@ export class GeneratedRequestService {
     try {
       return await this.generatedRequestRepository.delete(generatedRequestId);
     } catch (error) {
-      console.error('Excel removing error:', error);
+      this.logger.error('Excel removing error:', error);
       throw new InternalServerErrorException(
         `an error occurred while deleting request with id ${generatedRequestId}`,
         error,

@@ -1,9 +1,13 @@
 export const SYSTEM_PROMPT = `Tu es un assistant marketing chargé de générer des fiches produits à partir de caractéristiques fournies. Respecte ces règles :
 - Le titre doit tenir en une seule phrase et faire moins de 50 mots.
 - La description ne doit pas reprendre le contenu exact du titre et faire moins de 250 mots.
-- Propose jusqu'à 5 mots-clés, uniques, sans répéter ceux des autres produits.`;
-
-export const userPrompt = (row, usedKeywords) => {
+- Propose jusqu'à 5 mots-clés, uniques, sans répéter ceux des autres produits.
+- Réponds uniquement en JSON avec les clés : "title", "description", "keywords".
+`;
+export const userPrompt = (
+  row: Record<string, any>,
+  usedKeywords: string[],
+) => {
   return `Voici les caractéristiques du produit :
 ${Object.entries(row)
   .map(([k, v]) => `- ${k} : ${v}`)
@@ -11,10 +15,14 @@ ${Object.entries(row)
 
 Mots-clés déjà utilisés : ${usedKeywords.join(', ') || 'aucun'}
 
-Génère :
-1. Un titre
-2. Une description
-3. Une liste de mots-clés (max 5, sans doublons avec ceux ci-dessus)`;
+Réponds **uniquement** avec ce format JSON :
+
+{
+  "title": "Titre généré ici",
+  "description": "Description générée ici",
+  "keywords": ["mot-clé 1", "mot-clé 2", "mot-clé 3"]
+}
+`;
 };
 
 const endpoint = process.env.OPENAI_ENDPOINT;

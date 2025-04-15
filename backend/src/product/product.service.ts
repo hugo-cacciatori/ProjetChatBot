@@ -1,4 +1,6 @@
 import {
+  forwardRef,
+  Inject,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -19,19 +21,29 @@ export class ProductService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+
+    @Inject(forwardRef(() => GeneratedRequestService))
     private readonly generatedRequestService: GeneratedRequestService,
+
     private readonly tagService: TagService,
   ) {}
 
-  async create(productDto: CreateProductDto): Promise<Product> {
+  async create(createProductDto: CreateProductDto) {
     try {
-      const product = this.productRepository.create(productDto);
-
-      return await this.updateRelations(product, productDto);
+      const product = this.productRepository.create({
+        ...createProductDto,
+        request: { id: createProductDto.requestId },
+      });
+      return await this.productRepository.save(product);
     } catch (error) {
-      throw this.handleServerError(
-        'An error occcured while creating a product',
+      if (error?.code === 'ER_DUP_ENTRY') {
+        return await this.productRepository.findOne({
+          where: { name: createProductDto.name },
+        });
+      }
+      this.handleServerError(
         error,
+        'An error occurred while creating a product',
       );
     }
   }
@@ -73,7 +85,6 @@ export class ProductService {
     if (!product) {
       throw this.handleNotFoundError(`Product with id ${id} not found`);
     }
-
     return product;
   }
 

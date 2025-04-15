@@ -33,5 +33,5 @@ export class User {
     (generatedRequest) => generatedRequest.id,
     { cascade: true, nullable: true },
   )
-  request: GeneratedRequest | null;
+  requests: GeneratedRequest[];
 }

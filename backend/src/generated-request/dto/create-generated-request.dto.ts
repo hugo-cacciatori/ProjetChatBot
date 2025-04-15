@@ -3,4 +3,5 @@ import { GeneratedRequestStatus } from '../../utils/enum/generatedRequestStatus.
 export class CreateGeneratedRequestDto {
   usedKeywords?: string[];
   status?: GeneratedRequestStatus;
+  userId: number;
 }
