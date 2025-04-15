@@ -53,8 +53,6 @@ export class LlmService {
         }
 
         const data = await response.json();
-        console.log('data');
-        console.log(data.choices[0].message);
         const content = data.choices[0]?.message?.content;
         if (!content) {
           throw new Error('GPT response content is missing.');
