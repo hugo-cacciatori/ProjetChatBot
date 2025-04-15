@@ -8,7 +8,7 @@ import FileHistorySidebar from './components/FileHistorySidebar';
 import ChatHeader from './components/ChatHeader';
 import MessageList from './components/MessageList';
 import MessageInput from './components/MessageInput';
-import { jsonToExcel } from './utils/excelFactory';
+import { downloadExcel, jsonToExcel } from './utils/excelFactory';
 
 const ChatRoom: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -72,14 +72,24 @@ const ChatRoom: React.FC = () => {
               lastMessage: `Fichier uploadé: ${result.file.name}`,
             });
 
-            // TODO : requête Profil
-            var user = "";
-            // TODO : requête generated-request/user.id
-            var gptReturnJsonData = "";
-            // TODO : traduction jsondata en excel
-            // var gptReturnExcelFile = jsonToExcel(gptReturnJsonData);
-            // TODO : afficher un toasty de confirmation du lancement du téléchargement du résultat
-            // TODO : lancer le téléchargement du excel
+            try {
+              // 1. Get user profile
+              // TODO : requête Profil
+              // const user = await getUserProfile(); // Implement this function
+              
+              // 2. Process file with GPT
+              // TODO : requête generated-request/user.id
+              // const gptReturnJsonData = await processFileWithGPT(file, user.id); // Implement this function
+              
+              // 3. Convert to Excel
+              // const gptReturnExcelFile = jsonToExcel(gptReturnJsonData);
+
+              // downloadExcel(gptReturnExcelFile, `resultat-${result.file.name}.xlsx`);
+              
+              
+            } catch (error) {
+              // handle error
+            }
           }
         },
         onError: (error) => {

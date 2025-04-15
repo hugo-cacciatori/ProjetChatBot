@@ -1,4 +1,6 @@
 import * as XLSX from 'xlsx';
+import { toast } from 'react-toastify';
+
 
 interface ExcelExportOptions {
   sheetName?: string;
@@ -41,31 +43,41 @@ export const jsonToExcel = <T extends Record<string, any>>(
  * @param excelFile The Excel file as Blob or Uint8Array
  * @param fileName The name for the downloaded file
  */
+
 export const downloadExcel = (
   excelFile: Blob | Uint8Array,
   fileName: string = 'export.xlsx'
 ): void => {
-  if (excelFile instanceof Blob) {
-    // Handle Blob case
-    const url = URL.createObjectURL(excelFile);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  } else {
-    // Handle Uint8Array case - we need to convert back to workbook or write directly
-    const blob = new Blob([excelFile], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  try {
+    const blob = excelFile instanceof Uint8Array
+      ? new Blob([excelFile], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      : excelFile;
+
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = fileName;
+    a.download = fileName.includes('.xlsx') ? fileName : `${fileName}.xlsx`;
+    
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+
+    // Success toast
+    toast.success(`Excel file downloaded: ${fileName}`, {
+      position: "top-right",
+      autoClose: 3000,
+    });
+    
+  } catch (error) {
+    // Error toast
+    toast.error('Failed to download Excel file', {
+      position: "top-right",
+      autoClose: 3000,
+    });
   }
 };
 
