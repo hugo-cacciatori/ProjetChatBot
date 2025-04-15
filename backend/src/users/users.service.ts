@@ -26,7 +26,6 @@ export class UsersService {
   }
 
   async create(registerDto: RegisterAccountRequestDto): Promise<boolean> {
-    // create a new user on mariaDB
     try {
       const existingUser = await this.findUsername(registerDto.username);
       if (existingUser) {

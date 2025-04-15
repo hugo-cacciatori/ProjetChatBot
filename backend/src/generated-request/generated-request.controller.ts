@@ -36,11 +36,11 @@ export class GeneratedRequestController {
     });
   }
 
-  @UseGuards(AuthGuard)
-  @Get(':generatedRequestId')
-  async findOne(@Param('generatedRequestId') generatedRequestId: number) {
-    return await this.generatedRequestService.findOne(generatedRequestId);
-  }
+  // @UseGuards(AuthGuard)
+  // @Get(':generatedRequestId')
+  // async findOne(@Param('generatedRequestId') generatedRequestId: number) {
+  //   return await this.generatedRequestService.findOne(generatedRequestId);
+  // }
 
   @UseGuards(AuthGuard)
   @Get('/:userId')

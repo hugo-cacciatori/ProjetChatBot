@@ -30,7 +30,10 @@ export class ProductService {
 
   async create(createProductDto: CreateProductDto) {
     try {
-      const product = this.productRepository.create(createProductDto);
+      const product = this.productRepository.create({
+        ...createProductDto,
+        request: { id: createProductDto.requestId },
+      });
       return await this.productRepository.save(product);
     } catch (error) {
       if (error?.code === 'ER_DUP_ENTRY') {

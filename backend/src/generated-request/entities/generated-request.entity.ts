@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -20,7 +21,7 @@ export class GeneratedRequest {
   @OneToMany(() => Product, (product) => product.request)
   products: Product[];
 
-  @OneToMany(() => User, (User) => User.id)
+  @ManyToOne(() => User, (user) => user.requests)
   user: User;
 
   @CreateDateColumn({

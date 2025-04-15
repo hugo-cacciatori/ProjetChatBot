@@ -130,10 +130,9 @@ export class GeneratedRequestService {
     updateGeneratedRequestDto: UpdateGeneratedRequestDto,
   ) {
     try {
-      await this.generatedRequestRepository.update(
-        generatedRequestId,
-        updateGeneratedRequestDto,
-      );
+      await this.generatedRequestRepository.update(generatedRequestId, {
+        status: updateGeneratedRequestDto.status,
+      });
 
       return await this.generatedRequestRepository.findOneBy({
         id: generatedRequestId,
@@ -149,12 +148,14 @@ export class GeneratedRequestService {
 
   async findAllRequestByUserId(userId: number) {
     try {
-      return await this.generatedRequestRepository.find({
+      const toreturn = await this.generatedRequestRepository.find({
         where: {
           user: { id: userId },
         },
-        relations: ['products'],
+        relations: ['products', 'user'],
       });
+      console.log(toreturn);
+      return toreturn;
     } catch (error) {
       this.logger.error(
         'an error occurred while getting all request for user',
