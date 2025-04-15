@@ -37,7 +37,6 @@ export class GeneratedRequestBuilder {
   async buildAndQueue(): Promise<number> {
     try {
       const requestContent = this.dto ? this.dto : this.row;
-      //TODO: add used keyword to the content
       const generatedRequest =
         await this.generatedRequestService.generateRequest({
           status: GeneratedRequestStatus.PENDING,

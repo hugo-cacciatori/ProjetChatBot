@@ -7,14 +7,12 @@ import { CustomLogger } from 'src/utils/Logger/CustomLogger.service';
 
 @Controller('auth')
 export class AuthController {
-
   private readonly logger = new CustomLogger();
   constructor(private authService: AuthService) {}
 
   @HttpCode(HttpStatus.OK)
   @Post('login')
-  signIn(@Body() signInDto: Record<string, any>) {
-    this.logger.log(`User attempting to sign in with username: ${signInDto.username}`);
+  signIn(@Body() signInDto) {
     return this.authService.signIn(signInDto.username, signInDto.password);
   }
 
@@ -24,11 +22,10 @@ export class AuthController {
     return req.user;
   }
 
-  // create a new user
   @Post('register')
   register(@Body() registerAccountRequestDto: RegisterAccountRequestDto) {
-    this.logger.log(`new user attempting to register with username: ${registerAccountRequestDto.username}`);
-    
+    console.log('registerAccountRequestDto');
+    console.log(registerAccountRequestDto);
     return this.authService.register(registerAccountRequestDto);
   }
 }

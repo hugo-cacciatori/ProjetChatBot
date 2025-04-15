@@ -21,7 +21,7 @@ export class GeneratedRequest {
   products: Product[];
 
   @OneToMany(() => User, (User) => User.id)
-  users: User[];
+  user: User;
 
   @CreateDateColumn({
     type: 'timestamp',

@@ -9,11 +9,9 @@ import {
   ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
-  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 
-@Unique(['name'])
 @Entity()
 export class Product {
   @PrimaryGeneratedColumn()

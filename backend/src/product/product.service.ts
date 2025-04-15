@@ -82,7 +82,6 @@ export class ProductService {
     if (!product) {
       throw this.handleNotFoundError(`Product with id ${id} not found`);
     }
-
     return product;
   }
 

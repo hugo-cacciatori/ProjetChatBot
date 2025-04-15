@@ -5,7 +5,6 @@ import { CustomLogger } from 'src/utils/Logger/CustomLogger.service';
 
 @Injectable()
 export class AuthService {
-
   private readonly logger = new CustomLogger();
 
   constructor(
@@ -14,9 +13,13 @@ export class AuthService {
   ) {}
 
   async signIn(username: string, pass: string): Promise<any> {
+    console.log(username, pass);
     const user = await this.usersService.findUsername(username);
     if (user?.password !== pass) {
-      this.logger.error(`Invalid password for user: ${username}`, 'AuthService');
+      this.logger.error(
+        `Invalid password for user: ${username}`,
+        'AuthService',
+      );
       throw new UnauthorizedException();
     }
     const payload = { sub: user.id, username: user.username };
@@ -26,10 +29,14 @@ export class AuthService {
   }
 
   async register(registerDto: any): Promise<any> {
-    
-    const existingUser = await this.usersService.findUsername(registerDto.username);
+    console.log('registerDto', registerDto);
+    const existingUser = await this.usersService.findUsername(
+      registerDto.username,
+    );
     if (existingUser) {
-      this.logger.warn(`User already exists with username: ${registerDto.username}`);
+      this.logger.warn(
+        `User already exists with username: ${registerDto.username}`,
+      );
       throw new UnauthorizedException('User already exists');
     }
     return this.usersService.create(registerDto);

@@ -3,52 +3,48 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
-  Delete,
   UploadedFile,
   UseInterceptors,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { GeneratedRequestService } from './generated-request.service';
-import { UpdateGeneratedRequestDto } from './dto/update-generated-request.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateGeneratedRequestDto } from './dto/create-generated-request.dto';
 import { Express } from 'express';
 import { ExcelValidationInterceptor } from '../Interceptor/excel-validation.interceptor';
+import { AuthGuard } from '../auth/auth.guard';
 @Controller('generated-request')
 export class GeneratedRequestController {
   constructor(
     private readonly generatedRequestService: GeneratedRequestService,
   ) {}
 
+  @UseGuards(AuthGuard)
   @Post()
   @UseInterceptors(FileInterceptor('file'), new ExcelValidationInterceptor())
   async parseExcelFile(
     @UploadedFile() file: Express.Multer.File,
     @Body() dto: CreateGeneratedRequestDto,
+    @Req() request: any,
   ) {
-    return await this.generatedRequestService.fileParser(file.buffer, dto);
+    const requestUserId = request.user.sub;
+    return await this.generatedRequestService.fileParser(file.buffer, {
+      ...dto,
+      userId: requestUserId,
+    });
   }
 
-  @Get(':generatedRequestId') async findOne(
-    @Param('generatedRequestId') generatedRequestId: number,
-  ) {
+  @UseGuards(AuthGuard)
+  @Get(':generatedRequestId')
+  async findOne(@Param('generatedRequestId') generatedRequestId: number) {
     return await this.generatedRequestService.findOne(generatedRequestId);
   }
 
-  @Patch(':generatedRequestId') async update(
-    @Param('generatedRequestId') generatedRequestId: number,
-    @Body() updateGeneratedRequestDto: UpdateGeneratedRequestDto,
-  ) {
-    return await this.generatedRequestService.update(
-      generatedRequestId,
-      updateGeneratedRequestDto,
-    );
-  }
-
-  @Delete(':generatedRequestId') async remove(
-    @Param('generatedRequestId') generatedRequestId: number,
-  ) {
-    return await this.generatedRequestService.remove(generatedRequestId);
+  @UseGuards(AuthGuard)
+  @Get('/:userId')
+  async getAllRequestByUserId(@Param('userId') userId: number) {
+    return await this.generatedRequestService.findAllRequestByUserId(userId);
   }
 }

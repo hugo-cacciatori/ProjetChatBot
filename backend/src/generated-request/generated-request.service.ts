@@ -36,7 +36,7 @@ export class GeneratedRequestService {
       const workbook = XLSX.read(fileBuffer, { type: 'buffer', WTF: true });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(sheet);
-      const ids = [];
+      const ids: number[] = [];
       for (const row of rows) {
         const builder = new GeneratedRequestBuilder(this.queueService, this);
         const id = await builder.withDto(dto).withRow(row).buildAndQueue();
@@ -97,9 +97,10 @@ export class GeneratedRequestService {
 
   async generateRequest(createGeneratedRequestDto: CreateGeneratedRequestDto) {
     try {
-      const generatedRequest = this.generatedRequestRepository.create(
-        createGeneratedRequestDto,
-      );
+      const generatedRequest = this.generatedRequestRepository.create({
+        ...createGeneratedRequestDto,
+        user: { id: createGeneratedRequestDto.userId },
+      });
       return await this.generatedRequestRepository.save(generatedRequest);
     } catch (error) {
       this.logger.error('Excel generating request:', error);
@@ -141,6 +142,22 @@ export class GeneratedRequestService {
       this.logger.error('Excel updating error:', error);
       throw new InternalServerErrorException(
         `an error occurred while updating request with id ${generatedRequestId}`,
+        error,
+      );
+    }
+  }
+
+  async findAllRequestByUserId(userId: number) {
+    try {
+      return await this.generatedRequestRepository.find({
+        where: {
+          user: { id: userId },
+        },
+        relations: ['products'],
+      });
+    } catch (error) {
+      this.logger.error(
+        'an error occurred while getting all request for user',
         error,
       );
     }

@@ -19,12 +19,6 @@ export class User {
   @Column()
   password: string;
 
-  @Column()
-  firstName: string;
-
-  @Column()
-  lastName: string;
-
   @CreateDateColumn()
   created_At: Date;
 
@@ -39,5 +33,5 @@ export class User {
     (generatedRequest) => generatedRequest.id,
     { cascade: true, nullable: true },
   )
-  request: GeneratedRequest | null;
+  requests: GeneratedRequest[];
 }
