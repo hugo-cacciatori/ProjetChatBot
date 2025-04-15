@@ -8,12 +8,16 @@ import {
   Delete,
   UploadedFile,
   UseInterceptors,
+  UseGuards
 } from '@nestjs/common';
 import { GeneratedRequestService } from './generated-request.service';
 import { UpdateGeneratedRequestDto } from './dto/update-generated-request.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateGeneratedRequestDto } from './dto/create-generated-request.dto';
 import { Express } from 'express';
+import { AuthGuard } from 'src/auth/auth.guard';
+
+@UseGuards(AuthGuard)
 @Controller('generated-request')
 export class GeneratedRequestController {
   constructor(
