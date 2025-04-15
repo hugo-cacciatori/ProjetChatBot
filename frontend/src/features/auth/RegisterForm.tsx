@@ -20,25 +20,15 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
 }) => (
   <form onSubmit={handleSubmit} className="space-y-4">
     <FormInput
-      label="Name"
-      name="name"
+      label="Username"
+      name="username"
       type="text"
-      value={formData.name}
+      value={formData.username}
       onChange={handleChange}
       required
       className={inputClasses}
     />
-    
-    <FormInput
-      label="Email"
-      name="email"
-      type="email"
-      value={formData.email}
-      onChange={handleChange}
-      required
-      className={inputClasses}
-    />
-    
+
     <FormInput
       label="Password"
       name="password"
@@ -48,6 +38,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
       required
       className={inputClasses}
     />
+
     
     <button
       type="submit"

@@ -27,8 +27,11 @@ export class AuthService {
   }
 
   async register(registerDto: any): Promise<any> {
-    
+    console.log("registerDto");
+    console.log(registerDto);
     const existingUser = await this.usersService.findUsername(registerDto.username);
+    console.log("existingUser");
+    console.log(existingUser);
     if (existingUser) {
       this.logger.warn(`User already exists with username: ${registerDto.username}`);
       throw new UnauthorizedException('User already exists');

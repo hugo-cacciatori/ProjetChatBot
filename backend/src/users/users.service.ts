@@ -34,6 +34,8 @@ export class UsersService {
       }
 
       const user = this.usersRepository.create(registerDto);
+      console.log("user")
+      console.log(user)
       await this.usersRepository.save(user);
       return true;
     } catch (e) {

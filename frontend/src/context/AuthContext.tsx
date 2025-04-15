@@ -1,110 +1,139 @@
-import { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+  ReactNode,
+} from 'react';
+import { useRegisterUser } from '../hooks/userRegistrationHook';
+import { loginUser } from '../api/AuthService';
+import storage from '../features/auth/utils/storage';
+import { parseJwt } from '../features/auth/utils/jwt';
 
-// Define more comprehensive user type
+// Define user returned by backend
 interface User {
   id: string;
-  name: string;
-  email: string;
-  profilePicture: string;
-  isGuest?: boolean;
-  lastLogin?: Date;
+  username: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-// Enhanced auth context type with loading and error states
+// Auth context shape
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  loginAsGuest: () => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
+  register: (username: string, password: string) => Promise<void>;
+  // loginAsGuest: () => Promise<void>;
   logout: () => void;
   clearError: () => void;
 }
 
-// Create context with strict typing
+// Create AuthContext
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock authentication service (could be replaced with real API calls)
-const mockAuthService = {
-  login: async (email: string, password: string): Promise<User> => {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    if (!email || !password) {
-      throw new Error('Email and password are required');
-    }
-
-    return {
-      id: '1',
-      name: 'John Doe',
-      email,
-      profilePicture: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
-      lastLogin: new Date(),
-    };
-  },
-};
-
+// Provider implementation
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const login = useCallback(async (email: string, password: string) => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const authenticatedUser = await mockAuthService.login(email, password);
-      setUser(authenticatedUser);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  // Registration hook using React Query
+  const { mutateAsync: registerMutation, isPending } = useRegisterUser();
 
-  const loginAsGuest = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      setUser({
-        id: 'guest',
-        name: 'Guest User',
-        email: 'guest@example.com',
-        profilePicture: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400',
-        isGuest: true,
-        lastLogin: new Date(),
-      });
-    } catch (err) {
-      setError('Failed to login as guest');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const register = useCallback(
+    async (username: string, password: string) => {
+      setError(null);
+      try {
+        const registeredUser = await registerMutation({ username, password });
+
+        setUser({
+          id: registeredUser.id,
+          username: registeredUser.username,
+          createdAt: registeredUser.createdAt
+            ? new Date(registeredUser.createdAt)
+            : undefined,
+          updatedAt: registeredUser.updatedAt
+            ? new Date(registeredUser.updatedAt)
+            : undefined,
+        });
+
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('Registration failed');
+        }
+      }
+    },
+    [registerMutation]
+  );
+
+  const login = useCallback(
+    async (username: string, password: string) => {
+      setError(null);
+      try {
+        const response = await loginUser({ username, password });
+  
+        if (!response.access_token) {
+          throw new Error('No access token in response');
+        }
+  
+        // ✅ Save token
+        storage.setToken(response.access_token);
+  
+        const payload = parseJwt(response.access_token);
+        setUser({
+          id: payload.sub,
+          username: payload.username,
+        });
+
+  
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('Login failed');
+        }
+      }
+    },
+    []
+  );
+  
+  
+
+  // const loginAsGuest = useCallback(async () => {
+  //   setUser({
+  //     id: 'guest',
+  //     username: 'guest',
+  //   });
+  //   setError(null);
+  // }, []);
 
   const logout = useCallback(() => {
+    storage.clearToken();
     setUser(null);
     setError(null);
   }, []);
+  
 
   const clearError = useCallback(() => {
     setError(null);
   }, []);
 
-  // Memoize context value to prevent unnecessary re-renders
-  const contextValue = useMemo(() => ({
-    user,
-    isLoading,
-    error,
-    login,
-    loginAsGuest,
-    logout,
-    clearError,
-  }), [user, isLoading, error, login, loginAsGuest, logout, clearError]);
+  const contextValue = useMemo(
+    () => ({
+      user,
+      isLoading: isPending,
+      error,
+      login,
+      register,
+      logout,
+      clearError,
+    }),
+    [user, isPending, error, login, register, logout, clearError]
+  );
 
   return (
     <AuthContext.Provider value={contextValue}>
@@ -113,7 +142,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   );
 };
 
-// Custom hook with proper type checking
+// Hook for consuming context
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
