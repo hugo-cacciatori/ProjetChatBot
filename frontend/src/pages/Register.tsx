@@ -8,14 +8,14 @@ import LoginLink from '../features/auth/LoginLink';
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState<FormInputs>({
-    name: '',
-    email: '',
+    username: '',
     password: '',
   });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  const { login } = useAuth();
+
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -30,10 +30,9 @@ const Register: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
-    
+
     try {
-      // In a real app, this would be a registration call
-      await login(formData.email, formData.password);
+      await register(formData.username, formData.password); // email used as username
       navigate('/');
     } catch (err) {
       setError('Registration failed. Please try again.');
@@ -43,7 +42,8 @@ const Register: React.FC = () => {
     }
   };
 
-  const inputClasses = "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200";
+  const inputClasses =
+    'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200';
   const buttonClasses = `w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors ${
     isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
   }`;
@@ -52,10 +52,10 @@ const Register: React.FC = () => {
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
         <h1 className="text-2xl font-bold text-center mb-6">Create Account</h1>
-        
+
         <ErrorMessage message={error} />
-        
-        <RegisterForm 
+
+        <RegisterForm
           formData={formData}
           handleChange={handleChange}
           handleSubmit={handleSubmit}
@@ -63,7 +63,7 @@ const Register: React.FC = () => {
           inputClasses={inputClasses}
           buttonClasses={buttonClasses}
         />
-        
+
         <LoginLink />
       </div>
     </div>

@@ -3,7 +3,7 @@ import SubmitButton from '../common/SubmitButton';
 
 interface LoginFormProps {
   formData: {
-    email: string;
+    username: string;
     password: string;
   };
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -17,10 +17,10 @@ const LoginForm: React.FC<LoginFormProps> = ({
 }) => (
   <form onSubmit={handleSubmit} className="space-y-4">
     <FormInput
-      label="Email"
-      name="email"
-      type="email"
-      value={formData.email}
+      label="Username"
+      name="username"
+      type="text"
+      value={formData.username}
       onChange={handleChange}
       required
     />

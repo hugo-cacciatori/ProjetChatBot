@@ -2,21 +2,21 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import LoginForm from '../features/auth/LoginForm';
-import GuestLoginButton from '../features/auth/GuestLoginButton';
+// import GuestLoginButton from '../features/auth/GuestLoginButton';
 import SignUpLink from '../features/auth/SignUpLink';
 
 
 interface LoginFormData {
-  email: string;
+  username: string;
   password: string;
 }
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState<LoginFormData>({
-    email: '',
+    username: '',
     password: '',
   });
-  const { login, loginAsGuest } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -30,21 +30,21 @@ const Login: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(formData.email, formData.password);
+      await login(formData.username, formData.password);
       navigate('/');
     } catch (error) {
       console.error('Login failed:', error);
     }
   };
 
-  const handleGuestLogin = async () => {
-    try {
-      await loginAsGuest();
-      navigate('/');
-    } catch (error) {
-      console.error('Guest login failed:', error);
-    }
-  };
+  // const handleGuestLogin = async () => {
+  //   try {
+  //     await loginAsGuest();
+  //     navigate('/');
+  //   } catch (error) {
+  //     console.error('Guest login failed:', error);
+  //   }
+  // };
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -57,7 +57,7 @@ const Login: React.FC = () => {
           handleSubmit={handleSubmit}
         />
         
-        <GuestLoginButton handleGuestLogin={handleGuestLogin} />
+        {/* <GuestLoginButton handleGuestLogin={handleGuestLogin} /> */}
         
         <SignUpLink />
       </div>
