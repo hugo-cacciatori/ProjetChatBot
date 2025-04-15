@@ -11,7 +11,6 @@ import { RegisterAccountRequestDto } from 'src/auth/dto/register-account-request
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { UpdateUsersDto } from './dto/update-users.dto';
-import { UsersBuilder } from './builders/users.builder';
 
 @Injectable()
 export class UsersService {
@@ -35,7 +34,6 @@ export class UsersService {
       }
 
       const user = this.usersRepository.create(registerDto);
-
       await this.usersRepository.save(user);
       return true;
     } catch (e) {
