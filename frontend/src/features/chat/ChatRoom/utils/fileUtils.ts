@@ -5,6 +5,14 @@ import { Chat, SharedFile } from '../../../../types/common';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import storage from '../../../auth/utils/storage';
 
+// Circuit breaker state
+let failures = 0;
+let lastFailureTime = 0;
+let isOpen = false;
+
+
+
+
 // Types pour la validation
 interface FileValidationResult {
   isValid: boolean;
@@ -16,6 +24,12 @@ interface FileUploadResponse {
   file?: SharedFile;
   error?: string;
   message?: string;
+  products?: any[];
+}
+
+interface UserProfile {
+  id: number;
+  username: string;
 }
 
 // Constantes pour la validation
@@ -25,9 +39,8 @@ const ALLOWED_TYPES = [
   'application/vnd.ms-excel'
 ];
 
-/**
- * Vérifie si un fichier est valide
- */
+//Vérifie si un fichier est valide
+
 export const validateFile = (file: File): FileValidationResult => {
   if (!file) {
     return {
@@ -53,9 +66,8 @@ export const validateFile = (file: File): FileValidationResult => {
   return { isValid: true };
 };
 
-/**
- * Formate la taille d'un fichier en format lisible
- */
+//Formate la taille d'un fichier en format lisible
+ 
 export const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
@@ -99,6 +111,9 @@ export const processExcelFile = (
       messages: [...chat.messages, systemMessage],
       lastMessage: `Fichier uploadé: ${file.name}`,
     });
+
+    // Reset on success
+    failures = 0;
   } catch (error) {
     console.error('Erreur lors du traitement du fichier Excel:', error);
     const errorMessage = createMessage(`Erreur lors du traitement du fichier: ${error instanceof Error ? error.message : 'Erreur inconnue'}`, MESSAGE_SENDER.ASSISTANT);
@@ -106,6 +121,9 @@ export const processExcelFile = (
       messages: [...chat.messages, errorMessage],
       lastMessage: `Erreur lors du traitement du fichier`,
     });
+    failures++;
+    lastFailureTime = Date.now();
+    if (failures >= 3) isOpen = true;
   }
 };
 
@@ -115,6 +133,18 @@ export const useFileUpload = () => {
 
   return useMutation<FileUploadResponse, Error, File>({
     mutationFn: async (file: File) => {
+      // Check circuit breaker
+      console.log('hello')
+      if (isOpen) {
+        const now = Date.now();
+        if (now - lastFailureTime > 5000) { // 5 seconds timeout
+          isOpen = false;
+          failures = 0;
+        } else {
+          throw new Error('Service temporairement indisponible. Veuillez réessayer plus tard.');
+        }
+      }
+
       const validation = validateFile(file);
       if (!validation.isValid) {
         throw new Error(validation.error);
@@ -140,21 +170,48 @@ export const useFileUpload = () => {
       }
 
       const data = await response.json();
-      return {
-        success: true,
-        file: data.file,
-        message: data.message || 'Fichier uploadé avec succès'
-      };
-    },
-    onSuccess: (data: FileUploadResponse) => {
+      
+      // Reset on success
+      failures = 0;
+      
       if (data.file) {
         queryClient.setQueryData(['sharedFiles'], (oldData: SharedFile[] | undefined) => {
           return oldData ? [...oldData, data.file] : [data.file];
         });
       }
+      
+      return {
+        success: true,
+        file: data.file,
+        message: data.message || 'Fichier uploadé avec succès',
+        products: data.products
+      };
     },
     onError: (error: Error) => {
       console.error('Erreur lors du téléchargement du fichier:', error);
+      failures++;
+      lastFailureTime = Date.now();
+      if (failures >= 3) isOpen = true;
     }
   });
+};
+
+//Récupère le profil de l'utilisateur
+export const fetchUserProfile = async (): Promise<UserProfile> => {
+  const token = storage.getToken();
+  if (!token) {
+    throw new Error('Non authentifié');
+  }
+
+  const response = await fetch('http://localhost:3000/auth/profile', {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Erreur serveur: ${response.status}`);
+  }
+
+  return response.json();
 };
