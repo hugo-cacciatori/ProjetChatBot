@@ -2,8 +2,8 @@ import * as XLSX from 'xlsx';
 import { MESSAGE_SENDER } from '../constants';
 import { createMessage } from './messageUtils';
 import { Chat, SharedFile } from '../../../../types/common';
-import CircuitBreaker from 'opossum';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import storage from '../../../auth/utils/storage';
 
 // Types pour la validation
 interface FileValidationResult {
@@ -24,13 +24,6 @@ const ALLOWED_TYPES = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'application/vnd.ms-excel'
 ];
-
-// Configuration du Circuit Breaker
-const breakerOptions = {
-  timeout: 3000, // 3 secondes
-  errorThresholdPercentage: 50, // 50% d'erreurs avant d'ouvrir le circuit
-  resetTimeout: 30000, // 30 secondes avant de réessayer
-};
 
 /**
  * Vérifie si un fichier est valide
@@ -118,13 +111,21 @@ export const processExcelFile = (
 
 // Fonction pour uploader un fichier au backend
 const uploadFileToBackend = async (file: File): Promise<FileUploadResponse> => {
-  const breaker = new CircuitBreaker(async () => {
+  try {
     const formData = new FormData();
     formData.append('file', file);
+
+    const token = storage.getToken();
+    if (!token) {
+      throw new Error('Non authentifié');
+    }
 
     const apiUrl = import.meta.env.VITE_API_URL;
     const response = await fetch(`${apiUrl}/generated-request`, { 
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
       body: formData,
     });
 
@@ -138,10 +139,6 @@ const uploadFileToBackend = async (file: File): Promise<FileUploadResponse> => {
       file: data.file,
       message: data.message || 'Fichier uploadé avec succès'
     };
-  }, breakerOptions);
-
-  try {
-    return await breaker.fire();
   } catch (error) {
     console.error('Erreur lors de l\'upload du fichier:', error);
     return {
@@ -183,9 +180,16 @@ export const handleFileUpload = async (file: File): Promise<FileUploadResponse> 
     const formData = new FormData();
     formData.append('file', file);
 
-    const apiUrl = import.meta.env.VITE_API_URL;
-    const response = await fetch(`${apiUrl}/generated-request`, { 
+    const token = storage.getToken();
+    if (!token) {
+      throw new Error('Non authentifié');
+    }
+
+    const response = await fetch(`http://localhost:3000/generated-request`, { 
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
       body: formData,
     });
 

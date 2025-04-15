@@ -39,7 +39,7 @@
     }
     
     export async function loginUser(data: LoginDto): Promise<LoginResponse> {
-    const res = await fetch('http://localhost:3000/login', {
+    const res = await fetch('http://localhost:3000/auth/login', {
         method: 'POST',
         headers: {
         'Content-Type': 'application/json',
