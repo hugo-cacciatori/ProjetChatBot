@@ -30,6 +30,7 @@ interface FileUploadResponse {
 interface UserProfile {
   id: number;
   username: string;
+  sub?:number
 }
 
 // Constantes pour la validation
@@ -173,26 +174,14 @@ export const useFileUpload = () => {
       
       // Reset on success
       failures = 0;
-      
+
       if (data.file) {
         queryClient.setQueryData(['sharedFiles'], (oldData: SharedFile[] | undefined) => {
           return oldData ? [...oldData, data.file] : [data.file];
         });
       }
-      
-      return {
-        success: true,
-        file: data.file,
-        message: data.message || 'Fichier uploadé avec succès',
-        products: data.products
-      };
+      return data;
     },
-    onError: (error: Error) => {
-      console.error('Erreur lors du téléchargement du fichier:', error);
-      failures++;
-      lastFailureTime = Date.now();
-      if (failures >= 3) isOpen = true;
-    }
   });
 };
 

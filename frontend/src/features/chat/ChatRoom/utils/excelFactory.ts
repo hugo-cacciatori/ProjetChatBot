@@ -104,3 +104,61 @@ export const jsonToExcelMultipleSheets = (
     ? new Blob([excelFile], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     : excelFile;
 };
+
+
+import * as XLSX from 'xlsx';
+
+type Product = {
+  id: number;
+  name: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type Entry = {
+  id: number;
+  status: string;
+  created_at: string;
+  products: Product[];
+  user: {
+    id: number;
+    username: string;
+    created_At: string;
+    updated_At: string;
+    lastConnection_At: string;
+  };
+};
+
+export function excelFactory(data: Entry[]) {
+  // Crée une liste plate des produits avec les infos liées
+  const flatData = data.flatMap(entry =>
+      entry.products.map(product => ({
+        EntryId: entry.id,
+        EntryStatus: entry.status,
+        EntryCreatedAt: entry.created_at,
+        ProductId: product.id,
+        ProductName: product.name,
+        ProductDescription: product.description,
+        ProductCreatedAt: product.created_at,
+        ProductUpdatedAt: product.updated_at,
+        UserId: entry.user.id,
+        Username: entry.user.username,
+        UserCreatedAt: entry.user.created_At,
+        UserUpdatedAt: entry.user.updated_At,
+        UserLastConnectionAt: entry.user.lastConnection_At
+      }))
+  );
+
+  const worksheet = XLSX.utils.json_to_sheet(flatData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Produits');
+
+  // Génère le fichier Excel en mémoire
+  const excelBuffer = XLSX.write(workbook, {
+    bookType: 'xlsx',
+    type: 'array',
+  });
+
+  return new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}

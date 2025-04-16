@@ -8,7 +8,8 @@ import FileHistorySidebar from './components/FileHistorySidebar';
 import ChatHeader from './components/ChatHeader';
 import MessageList from './components/MessageList';
 import MessageInput from './components/MessageInput';
-import { downloadExcel, jsonToExcel } from './utils/excelFactory';
+import {downloadExcel, excelFactory, jsonToExcel} from './utils/excelFactory';
+import {toast} from "react-toastify";
 
 const ChatRoom: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,7 +19,7 @@ const ChatRoom: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [newMessage, setNewMessage] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const { mutate: uploadFile, isPending: isUploading } = useFileUpload();
+  const { mutateAsync: uploadFile } = useFileUpload();
 
   const chat = getChat(id!);
 
@@ -58,37 +59,29 @@ const ChatRoom: React.FC = () => {
 
   const onFileUpload = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
-      if (!chat) return;
       const file = event.target.files?.[0];
       if (!file) return;
-      
-      uploadFile(file, {
+
+      await uploadFile(file, {
         onSuccess: async (result) => {
-          if (result.file) {
-            const systemMessage = createMessage(`Fichier uploadé: ${result.file.name}`, MESSAGE_SENDER.ASSISTANT);
-            updateChat(id!, {
-              files: [...chat.files, result.file],
-              messages: [...chat.messages, systemMessage],
-              lastMessage: `Fichier uploadé: ${result.file.name}`,
-            });
-
+              console.log("result : ",result);
+            toast.success('file successfully uploaded');
             try {
-
               const user = await fetchUserProfile(); // Implement this function
               
-              const gptReturnJsonData = await getGPTResponse(user.id); // Implement this function
-              
-              const gptReturnExcelFile = jsonToExcel(gptReturnJsonData);
+              const gptReturnJsonData = await getGPTResponse(user.sub); // Implement this function
+              console.log("gptReturnJsonData");
+              console.log(gptReturnJsonData);
+              const gptReturnExcelFile = excelFactory(gptReturnJsonData);
+              downloadExcel(gptReturnExcelFile, `resultat.xlsx`);
 
-              downloadExcel(gptReturnExcelFile, `resultat-${result.file.name}.xlsx`);
-              
-              
+
             } catch (error) {
-              // handle error
+              console.log("error :", error)
             }
-          }
         },
         onError: (error) => {
+            console.log("error :",error);
           const errorMessage = createMessage(`Erreur: ${error.message}`, MESSAGE_SENDER.ASSISTANT);
           updateChat(id!, {
             messages: [...chat.messages, errorMessage],
