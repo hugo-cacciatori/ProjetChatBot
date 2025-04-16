@@ -8,7 +8,7 @@ import FileHistorySidebar from './components/FileHistorySidebar';
 import ChatHeader from './components/ChatHeader';
 import MessageList from './components/MessageList';
 import MessageInput from './components/MessageInput';
-import {downloadExcel, excelFactory, jsonToExcel} from './utils/excelFactory';
+import {downloadExcel, excelFactory} from './utils/excelFactory';
 import {toast} from "react-toastify";
 
 const ChatRoom: React.FC = () => {
@@ -69,7 +69,7 @@ const ChatRoom: React.FC = () => {
             try {
               const user = await fetchUserProfile(); // Implement this function
               
-              const gptReturnJsonData = await getGPTResponse(user.sub); // Implement this function
+              const gptReturnJsonData = await getGPTResponse(user.sub!); // Implement this function
               console.log("gptReturnJsonData");
               console.log(gptReturnJsonData);
               const gptReturnExcelFile = excelFactory(gptReturnJsonData);
@@ -84,7 +84,7 @@ const ChatRoom: React.FC = () => {
             console.log("error :",error);
           const errorMessage = createMessage(`Erreur: ${error.message}`, MESSAGE_SENDER.ASSISTANT);
           updateChat(id!, {
-            messages: [...chat.messages, errorMessage],
+            messages: [...chat!.messages, errorMessage],
             lastMessage: `Erreur lors de l'upload du fichier`,
           });
         }

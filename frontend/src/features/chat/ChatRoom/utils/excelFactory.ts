@@ -105,9 +105,6 @@ export const jsonToExcelMultipleSheets = (
     : excelFile;
 };
 
-
-import * as XLSX from 'xlsx';
-
 type Product = {
   id: number;
   name: string;
