@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useChat } from '../../../context/ChatContext';
 import { MESSAGE_SENDER } from './constants';
 import { createMessage, generateAutoReply } from './utils/messageUtils';
-import { useFileUpload } from './utils/fileUtils';
+import { fetchUserProfile, getGPTResponse, useFileUpload } from './utils/fileUtils';
 import FileHistorySidebar from './components/FileHistorySidebar';
 import ChatHeader from './components/ChatHeader';
 import MessageList from './components/MessageList';
@@ -63,7 +63,7 @@ const ChatRoom: React.FC = () => {
       if (!file) return;
       
       uploadFile(file, {
-        onSuccess: (result) => {
+        onSuccess: async (result) => {
           if (result.file) {
             const systemMessage = createMessage(`Fichier uploadé: ${result.file.name}`, MESSAGE_SENDER.ASSISTANT);
             updateChat(id!, {
@@ -73,18 +73,14 @@ const ChatRoom: React.FC = () => {
             });
 
             try {
-              // 1. Get user profile
-              // TODO : requête Profil
-              // const user = await getUserProfile(); // Implement this function
-              
-              // 2. Process file with GPT
-              // TODO : requête generated-request/user.id
-              // const gptReturnJsonData = await processFileWithGPT(file, user.id); // Implement this function
-              
-              // 3. Convert to Excel
-              // const gptReturnExcelFile = jsonToExcel(gptReturnJsonData);
 
-              // downloadExcel(gptReturnExcelFile, `resultat-${result.file.name}.xlsx`);
+              const user = await fetchUserProfile(); // Implement this function
+              
+              const gptReturnJsonData = await getGPTResponse(user.id); // Implement this function
+              
+              const gptReturnExcelFile = jsonToExcel(gptReturnJsonData);
+
+              downloadExcel(gptReturnExcelFile, `resultat-${result.file.name}.xlsx`);
               
               
             } catch (error) {

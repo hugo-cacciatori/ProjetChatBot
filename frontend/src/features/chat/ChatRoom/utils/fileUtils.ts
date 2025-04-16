@@ -215,3 +215,36 @@ export const fetchUserProfile = async (): Promise<UserProfile> => {
 
   return response.json();
 };
+
+// types.ts (or wherever you define types)
+export interface GPTResponse {
+  id: string;
+  userId: string;
+  generatedText: string;
+  createdAt: string;
+}
+
+export const getGPTResponse = async (userId: number): Promise<any> => {
+  const token = storage.getToken();
+  if (!token) {
+    throw new Error('Non authentifié');
+  }
+
+  const response = await fetch(`http://localhost:3000/generated-request/${userId}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  console.log('Raw Fetch Response:', response);
+
+  if (!response.ok) {
+    throw new Error(`Erreur serveur: ${response.status}`);
+  }
+
+  const data = await response.json();
+
+  console.log('Parsed JSON Response:', data);
+
+  return data;
+};
